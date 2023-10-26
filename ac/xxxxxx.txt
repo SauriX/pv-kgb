@@ -1,0 +1,1 @@
+INSERT INTO gastos (id_usuario,descripcion,monto,fecha_hora,provision) VALUES ('1','PAGO DE 40 PIEZAS DE PAN','150','2019-11-27 12:30:52',1)

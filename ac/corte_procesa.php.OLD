@@ -1,0 +1,57 @@
+<?php
+include('../includes/db.php');
+
+extract($_POST);
+
+if(!$id_corte) exit('Falta ID Corte');
+$hay = count($tickets);
+if(!$hay) exit('Seleccione tickets.');
+
+$sql = "SELECT * FROM ventas WHERE id_corte = $id_corte";
+$q = mysql_query($sql);
+
+while($ft = mysql_fetch_assoc($q)){
+	$id_venta = $ft['id_venta'];
+	if(!in_array($id_venta, $tickets)){
+		$sql = "DELETE FROM ventas WHERE id_venta = $id_venta";
+		$qx = mysql_query($sql);
+		$sql = "DELETE FROM venta_detalle WHERE id_venta = $id_venta";
+		$qx = mysql_query($sql);
+	}
+}
+
+/*
+	PARA ACTUALIZAR FOLIOS:
+
+	SACAR EL ULTIMO ID DEL ULTIMO CORTE ANTES DEL ACTUAL.
+	SUMARLE UNO
+	ACTUALIZAR EN ASC.
+
+*/
+
+$sql = "SELECT id_venta FROM ventas WHERE id_corte != 0 AND id_corte != $id_corte ORDER BY id_venta DESC LIMIT 1";
+$q = mysql_query($sql);
+$ultimo_id_venta = @mysql_result($q, 0);
+
+
+if(!$ultimo_id_venta):
+	$ultimo_id_venta = 0;	
+endif;
+
+$ultimo_id_venta = $ultimo_id_venta + 1;
+
+$sql = "SELECT id_venta FROM ventas WHERE id_corte = $id_corte ORDER BY id_venta ASC";
+$q = mysql_query($sql);
+
+while($ft = mysql_fetch_assoc($q)):
+
+	$sql = "UPDATE ventas SET id_venta = $ultimo_id_venta WHERE id_venta = ".$ft['id_venta'];
+	$qx = mysql_query($sql);
+	$sql = "UPDATE venta_detalle SET id_venta = $ultimo_id_venta WHERE id_venta = ".$ft['id_venta'];
+	$qx = mysql_query($sql);
+	
+	$ultimo_id_venta++;
+	
+endwhile;
+
+echo '1';

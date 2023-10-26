@@ -1,0 +1,7 @@
+SELECT productos.paquete, productos.sinn,productos.extra, venta_detalle.cantidad, productos.nombre, venta_detalle.precio_venta, venta_detalle.id_producto, venta_detalle.comentarios, productos.id_categoria, categorias.impresora, productos.imprimir_solo, ventas.mesa, ventas.hora, ventas.fecha
+        FROM venta_detalle
+        LEFT JOIN ventas ON ventas.id_venta = venta_detalle.id_venta
+        LEFT JOIN productos ON productos.id_producto = venta_detalle.id_producto
+        LEFT JOIN categorias ON categorias.id_categoria = productos.id_categoria
+        WHERE venta_detalle.id_venta =24
+        AND venta_detalle.id_producto !=0

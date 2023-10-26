@@ -1,0 +1,1 @@
+http://tacoloco.mx/facturacion/web_services_facturacion_magochile.php?rfc=FOAA880607IH8&razon_social=ADOLFO%20ALBERTO%20FLORES%20AREVALO&email=adolfoflores%40me.com&cantidad=1&unidad=NA&clave=01&descripcion=CONSUMO%20DE%20ALIMENTOS&importe=0.86&metodo_pago=1&iva=0.14&observacion=&total=1
