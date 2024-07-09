@@ -85,7 +85,7 @@ if(!$reimprime){
 
 		if($check_imprimir == 'false'){
 
-			imprimir_mesa($id_venta_cobrar,'cobrar',$cliente,$numero);
+			$var=imprimir_mesa($id_venta_cobrar,'cobrar',$cliente,$numero);
 
 		}else {
 			abrir_caja();
@@ -111,7 +111,7 @@ if(!$reimprime){
 
 		}
 
-		echo "1";
+		echo '1|'.$var;
 	}else{
 		mysql_query("ROLLBACK");
 		echo "Hubo problema, por favor intenta de nuevo ".$sql;
@@ -178,12 +178,12 @@ if(!$reimprime){
 
 
 
-	imprimir_mesa($id_venta,'cobrar',$cliente,$numero);
+	$var=imprimir_mesa($id_venta,'cobrar',$cliente,$numero);
 
 
 
 		//aqui
-	echo "1";
+	echo '1|'.$var;
 
 	if($reabierta>0){
 		$sql = "SELECT motivo FROM ventas_cancelaciones WHERE id_venta_cancelacion = $reabierta";

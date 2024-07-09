@@ -129,6 +129,14 @@ if(!isset($_SESSION)){session_destroy(); }
     display: block;
     margin-top: 10px;
 }
+
+body{
+    background-image: url('login.jpg');
+    -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
 	</style>
    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>

@@ -18,11 +18,11 @@ $gastos_descripcion=limpiaStr($gastos_descripcion,1,1);
 
 	$sql="UPDATE gastos SET  descripcion='$gastos_descripcion', monto='$gastos_monto', fecha_hora='$fechahora', provision='0'  WHERE id_gasto=$id_gasto";
 	$q=mysql_query($sql);
-	imprimir_gasto($id_gasto);
+	$var=imprimir_gasto($id_gasto);
 	if($q){
 
 
-		echo "1";
+		echo $var;
 		
 		
 	}else{

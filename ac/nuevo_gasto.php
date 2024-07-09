@@ -20,9 +20,9 @@ $gastos_descripcion=limpiaStr($gastos_descripcion,1,1);
 	
 	if($q){
 		$id_gasto=mysql_insert_id();
-		imprimir_gasto($id_gasto);
+		$var=imprimir_gasto($id_gasto);
 		//gastos_imprimir();
-		echo "1";
+		echo $var;
 	}else{
 		echo "2|Ocurrió un error, intente más tarde.";
 	}

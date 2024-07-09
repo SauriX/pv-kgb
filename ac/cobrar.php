@@ -121,7 +121,6 @@ foreach($_POST as $p => $v){
 		if($id_producto==""){ continue; }
 		$sql="INSERT INTO venta_detalle(id_venta,id_producto,cantidad,precio_venta,comentarios)VALUES('$id_venta','$id_producto','$cantidad','$precio','$comentario')";
 		$query = mysql_query($sql,$conexion);
-		
 		$pack=0; 
 		$sql_pro="SELECT productos.* ,categorias.nombre as categorias FROM productos
 		LEFT JOIN categorias ON productos.id_categoria = categorias.id_categoria
@@ -202,16 +201,16 @@ if($error==false){
 	if($mesa_cerrada_imprimir){
 		
 	
-		imprimir_mesa($id_venta,'cerrar');
+		$var.=imprimir_mesa($id_venta,'cerrar');
 
 
-		imprimir_comandas('venta',$id_venta);
+		$var.=imprimir_comandas('venta',$id_venta);
 
 		 $up_coman="UPDATE venta_detalle SET impreso=1 WHERE id_venta=$id_venta";
 		 mysql_query($up_coman);
 	}else {
 			
-		imprimir_comandas('venta',$id_venta);
+		$var.=imprimir_comandas('venta',$id_venta);
 		$up_coman="UPDATE venta_detalle SET impreso=1 WHERE id_venta=$id_venta";
 		mysql_query($up_coman);
 
@@ -252,9 +251,9 @@ $id_producto4=$datos3['id'];
 	//fion de updatear ingrediente
      
     if($auto_cobro==1 or !$numero_mesa  ){
-	echo $id_venta;
+	echo $id_venta.'|'.$var;
 	}else{
-		echo "1";
+		echo '1|'.$var;
 	}
 }else{
 	mysql_query("ROLLBACK");

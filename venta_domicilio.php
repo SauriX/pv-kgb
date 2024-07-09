@@ -533,9 +533,11 @@ $( "#cerrador" ).click(function() {
 			$('#imagen_loader_corte').attr('src','img/load-verde.gif').show();
 			$('#mensaje_loader_corte').html('Realizando Corte de Caja..');
 			$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data) {
-				if(data==1){
-					$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
+				$.post( "http://localhost/imprimir",{data:data});
+				$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
 					$('#mensaje_loader_corte').html('Listo.<br/><br/><button onclick="location.reload();" type="button" class="btn btn-default btn_ac btn-md">Terminar</button>');
+				/* if(data==1){
+	
 
 				}else if(data=='NOSESSION'){
 					alert('Su sesión ha expirado, por favor reingrese nuevamente.');
@@ -548,7 +550,7 @@ $( "#cerrador" ).click(function() {
 					location.reload();
 				}else{
 					alert(data);
-				}
+				} */
 			});
 
 		}
@@ -861,9 +863,9 @@ function guardatemp(){
 		var datos = $('#venta_form').serialize()+'&numero_mesa='+numero_mesa ;
 
 		$.post('ac/cobrar.php',datos,function(data) {
-
-				if(data==1){
-
+				var datas = data.split('|');
+				if(datas[0]==1){
+						$.post( "http://localhost/imprimir",{data:datas[1]});
 
 				}else{
 					$('.hidden_loader').show();
@@ -927,7 +929,9 @@ function cobrar_cuenta(){
 			$('#cobrar_final').attr('disabled', 'true');
 			$.post('ac/cobrar_pagar.php',datos+'&pagarOriginal='+pagarOriginal,function(data) {
 				console.log(data);
-				if(data==1){
+				var datas = data.split('|');
+				if(datas[0]==1){
+					$.post( "http://localhost/imprimir",{data:datas[1]});
 					window.location  = 'index.php';
 				}else{
 
@@ -1070,7 +1074,7 @@ function extra(codigo,id,nivel2){
 		element.classList.add("seleccionada");
 	}else{
 		element.classList.remove("seleccionada");
-		extras.splice(pos, 1);
+		extras.split(pos, 1);
 	}
 }
 
@@ -1089,7 +1093,7 @@ function extra2(codigo,id,nivel2){
 		sin.classList.add("griso");
 	}else{
 		sin.classList.remove("griso");
-		extras.splice(pos, 1);
+		extras.split(pos, 1);
 	}
 }
 
@@ -1658,25 +1662,28 @@ function cobrar(){
 		var datos = $('#venta_form').serialize()+'&numero_mesa='+numero_mesa+'&cobro='+auto_cobro+'&domicilio='+domicilio;
 	
 		$.post('ac/cobrar.php',datos,function(data){
+			var datas = data.split('|');
 			console.log(data);
     	<?if($auto_cobro==1){?>
-			if(data==1){
+			if(datas[0]==1){
+				$.post( "http://localhost/imprimir",{data:datas[1]});
 			cobradoExito();
 			}else{
-				if(!isNaN(data)){
+				
+				if(!isNaN(datas[0])){
 					console.log(data);
-					pagar(data);
+					pagar(datas[0]);
 				}else{
 					alert(data);
 					cobradoExito();
 				}
 			} 
 		<?}else{?>
-			if(data==1){
+			if(datas[0]==1){
 				cobradoExito();
 			}else{
-				if(!isNaN(data)){
-					pagar(data);
+				if(!isNaN(datas[0])){
+					pagar(datas[0]);
 				}else{
 					alert(data);
 					cobradoExito();

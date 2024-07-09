@@ -22,5 +22,5 @@
 		}
 	}
 
-imprimir_mesa($id_venta,'cerrar');
-echo '1';
+$var =imprimir_mesa($id_venta,'cerrar');
+echo '1|'.$var;

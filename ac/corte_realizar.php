@@ -164,7 +164,7 @@ if($error){
 		$mesas_monto_por = @($mesas_monto/$total_totales)*100;
 		$barra_monto_por = @($barra_monto/$total_totales)*100;
        $fecha_corte = $fecha." ".$hora;
-	   imprimir_corte($id_corte);
+	  $corte= imprimir_corte($id_corte);
 	   $cliente = curl_init();
 	   curl_setopt($cliente, CURLOPT_URL, "http://localhost/vendefacil_restaurante/ac/realiza_backup.php");
 	   curl_setopt($cliente, CURLOPT_HEADER, 0);
@@ -212,7 +212,7 @@ if($error){
 
 				}*/
 
-				echo "1";
+				echo $corte;
 
 
 }
@@ -241,7 +241,7 @@ if($codigo =='d'){
 			}
 		}
 	if($q){
-		echo '1'; // Valicacion de exitoso
+		echo $corte; // Valicacion de exitoso
 	}else{
 		echo '0';// error de Valicacion
 	}

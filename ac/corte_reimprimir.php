@@ -106,8 +106,8 @@
 
 		$mesas_monto_por = @($mesas_monto/$total_totales)*100;
 		$barra_monto_por = @($barra_monto/$total_totales)*100;
-		imprimir_corte($id_corte,1);
-			echo '1';
+		$var.=imprimir_corte($id_corte,1);
+			echo $var;
 
 
 

@@ -8,7 +8,9 @@
 		display: none;
 	}
 </style>
+
 <?
+
 $corte_permiso = 1;
 
 if($s_tipo!='1'){
@@ -582,8 +584,9 @@ function deshacer(){
 			type: 'POST',
 			data: {codigo:'d'},
 		})
-		.done(function() {
+		.done(function(elem) {
 			alert("ok");
+			console.log(elem,elemento);
 		})
 		.fail(function() {
 			console.log("error");

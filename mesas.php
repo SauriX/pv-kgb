@@ -138,6 +138,7 @@ $(function(){
 });
 
 function cerrar_mesa(mesa,id_venta,bebidas){
+	
 	var yo = $('#btn_cerrar_mesa').html();
 
 	if(mesa){
@@ -151,7 +152,11 @@ function cerrar_mesa(mesa,id_venta,bebidas){
 						
 			$('#btn_cerrar_mesa').html('Cerrando...');
 			$.post('ac/cerrar_mesa.php','mesa='+mesa+'&id_venta='+id_venta,function(data) {
-				if(data==1){
+				
+				var datas = data.split('|');
+				console.log(datas);
+				if(datas[0]==1){
+					$.post( "http://localhost/imprimir",{data:datas[1]});
 					$('#content_verMesas').load('mesas.php');
 				}else{
 					alert(data);
