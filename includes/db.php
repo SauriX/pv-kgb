@@ -6,11 +6,11 @@ $usuario="root";
 $clave="root";
 $base="vendefacil_restaurante";*/
 
-$servidor="localhost";
-$usuario="root";
-$clave="root";
+$servidor="kgbgrill.gruposafeguard.com";
+$usuario="u278914533_root";
+$clave="Numero32.";
 
-    $base="vendefacil_5";
+    $base="u278914533_vendefacil_5";
 
 
 
