@@ -1,4 +1,5 @@
 <?
+include("includes/session_ui.php");
 $id_venta=$_GET['id_venta'];
 $mesa=$_GET['mesa'];
 $sq="SELECT venta_detalle.*,productos.nombre FROM venta_detalle
@@ -89,7 +90,9 @@ $v_bebida = $row_b ['bebida'];
 					<td align="right"><?=number_format($dat['precio_venta'],2)?></td>
 					<td align="center"><?=$dat['cantidad']?></td>
 					<td align="right"><?=number_format($dat['cantidad']*$dat['precio_venta'],2)?></td>
+					<?if($s_tipo==1){?>
 					<td align="right"><a role="button" class="btn btn-danger btn-xs "    onclick="eliminar_detalle(<?=$dat['id_detalle'];?>);">Eliminar</a></td>
+					<?}?>
 				</tr>
 				<? } ?>
 
@@ -187,12 +190,19 @@ function cerrarMesa(id_venta,mesa){
 	   descuento = $('#consumo_total_mesa').text();
    }*/
 	$.post('ac/cerrar_mesa.php','mesa='+mesa+'&id_venta='+id_venta+'&id_descuento='+id_descuento+'&monto_descuento='+monto_descuento,function(data) {
-		if(data==1){
-			window.open("?Modulo=VentaTouch&id_venta=<?=$id_venta?>", "_self");
-		}else{
-			console.log(data);
-			alert(data);
-		}
+		if(datas[0]==1){
+				$.post( "http://localhost/imprimir",{data:datas[1]});
+			cobradoExito();
+			}else{
+				
+				if(!isNaN(datas[0])){
+					console.log(data);
+					pagar(datas[0]);
+				}else{
+					alert(data);
+					cobradoExito();
+				}
+			} 
 	});
 }
 
@@ -242,10 +252,19 @@ function eliminar_detalle(id){
 	function imprimir(id){
 
 		$.post('includes/reimprimir_comanda.php','id_venta=<?=$id_venta?>',function(data) {
-		        alert(data);
-
-				//window.open("?Modulo=VentaDomicilio", "_self");
-
+			if(datas[0]==1){
+				$.post( "http://localhost/imprimir",{data:datas[1]});
+			cobradoExito();
+			}else{
+				
+				if(!isNaN(datas[0])){
+					console.log(data);
+					pagar(datas[0]);
+				}else{
+					alert(data);
+					cobradoExito();
+				}
+			} 
 
 
 		});
