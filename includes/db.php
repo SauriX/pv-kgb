@@ -31,4 +31,7 @@ function mysql_real_escape_string($string){
     global $conexion;
     return mysqli_real_escape_string($conexion, $string);
 }
+function mysql_fetch_object($result){
+    return mysqli_fetch_object($result);
+}
 ?>
