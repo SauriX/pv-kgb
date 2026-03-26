@@ -1,16 +1,16 @@
 <?php
 error_reporting(0);
 
-/*$servidor="localhost";
+/* $servidor="localhost";
 $usuario="root";
 $clave="root";
-$base="vendefacil_restaurante";*/
+$base="vendefacil_5"; */
 
-$servidor="kgbgrill.gruposafeguard.com";
-$usuario="u278914533_root";
-$clave="Numero32.";
+$servidor="db5020093809.hosting-data.io";
+$usuario="dbu3763371";
+$clave="vendefacil_5";
 
-    $base="u278914533_vendefacil_5";
+    $base="dbs15483147";
 
 
 

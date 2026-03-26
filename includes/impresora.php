@@ -325,42 +325,43 @@ function imprimir_corte($id_corte, $re = false)
     $cancelaciones = 0;
     $cta_expedidas = 0;
 
-    $sqlMetodos = "SELECT id_metodo,metodo_pago FROM metodo_pago";
-    $qMetodos = mysql_query($sqlMetodos);
-    while ($data_metodos = mysql_fetch_assoc($qMetodos)) {
-        $me[$data_metodos['id_metodo']] = $data_metodos['metodo_pago'];
+ $efectivo = 0;
+$tarjetas = 0;
+$transferencia = 0;
+
+$sql = "SELECT * FROM ventas WHERE id_corte = $id_corte";
+$q = mysql_query($sql);
+
+while ($ft = mysql_fetch_assoc($q)) {
+
+    $efectivo += floatval($ft['monto_efectivo']);
+    $tarjetas += floatval($ft['monto_tarjeta']);
+    $transferencia += floatval($ft['monto_transferencia']);
+
+    $cta_expedidas++;
+
+    if ($ft['mesa'] != 'BARRA') {
+        $mesas_ct++;
+        $mesas_monto += $ft['monto_pagado'];
+    } else {
+        $barra_ct++;
+        $barra_monto += $ft['monto_pagado'];
     }
-    $sql = "SELECT*FROM ventas WHERE id_corte = $id_corte";
-    $q = mysql_query($sql);
-    while ($ft = mysql_fetch_assoc($q)) {
 
-        $montos_metodo[$ft['id_metodo']] += $ft['monto_pagado'];
+    $total_totales += $ft['monto_pagado'];
 
-        $cta_expedidas++;
-
-        if ($ft['mesa'] != 'BARRA') {
-            $mesas_ct++;
-            $mesas_monto += $ft['monto_pagado'];
-        } else {
-            $barra_ct++;
-            $barra_monto += $ft['monto_pagado'];
-        }
-
-        $total_totales += $ft['monto_pagado'];
-
-        if ($ft['facturado']) {
-            $pre_fact_ct++;
-            $pre_fact_monto += $ft['monto_facturado'];
-        } else {
-            $no_fact_ct++;
-            $no_fact_monto += $ft['monto_pagado'];
-        }
-
-        if ($ft['reabierta']) {
-            $cancelaciones++;
-        }
-
+    if ($ft['facturado']) {
+        $pre_fact_ct++;
+        $pre_fact_monto += $ft['monto_facturado'];
+    } else {
+        $no_fact_ct++;
+        $no_fact_monto += $ft['monto_pagado'];
     }
+
+    if ($ft['reabierta']) {
+        $cancelaciones++;
+    }
+}
 
     $promedio = @($total_totales / $cta_expedidas);
     $mesas_por = @($mesas_ct / $cta_expedidas) * 100;
@@ -570,22 +571,13 @@ function imprimir_corte($id_corte, $re = false)
     }
 
 
-    $efectivo = 0;
-    $tarjetas = 0;
-    $transferencia = 0;
+$efectivo = number_format($efectivo, 2, '.', '');
+$tarjetas = number_format($tarjetas, 2, '.', '');
+$transferencia = number_format($transferencia, 2, '.', '');
     $descuentoTotal = $g_total - $totalDescuento;
-    foreach ($montos_metodo as $id_m => $monto) {
-        if ($id_m == '1') {
-            $efectivo = floatval($monto);
-        } elseif ($id_m == '4' || $id_m == '28') {
-            $tarjetas = floatval($tarjetas) + floatval($monto);
-        }
-        if ($id_m == '3') {
-            $transferencia = floatval($transferencia) + floatval($monto);
-        }
-    }
 
-    $efectivo2 = number_format($descuentoTotal, 2, '.', '');
+
+
     $tarjetas2 = number_format($tarjetas, 2, '.', '');
     $promedio = ($g_total / $cta_expedidas);
     $mesas_monto = number_format($mesas_monto, 2, '.', '');
@@ -609,8 +601,9 @@ function imprimir_corte($id_corte, $re = false)
     esc_pos_font($printer, "A");
     esc_pos_align($printer, "left");
     esc_pos_line($printer, "DESGLOSE:");
-    esc_pos_line($printer, "EFECTIVO: ' . $efectivo . '");
-    esc_pos_line($printer, "TARJETAS: ' . $tarjetas2 . '");
+esc_pos_line($printer, "EFECTIVO: ' . $efectivo . '");
+esc_pos_line($printer, "TARJETAS: ' . $tarjetas . '");
+esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
     esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
     esc_pos_line($printer, "");
     esc_pos_line($printer, "CUENTAS EXPEDIDAS: ' . $cta_expedidas . '");
@@ -2021,7 +2014,10 @@ function imprimir_mesa($id_venta, $tipo, $desc = false)
     $metodo = $ve['metodo_txt'];
     $pagarOriginal = $ve['pagarOriginal'];
     $DescEfec_txt = $ve['DescEfec_txt'];
-    $efectivo = $ve['recibe_txt'];
+    $monto_efectivo = $ve['monto_efectivo'];
+$monto_tarjeta = $ve['monto_tarjeta'];
+$monto_transferencia = $ve['monto_transferencia'];
+
     $cambio = $ve['cambio_txt'];
     $codigo = $ve['codigo_activacion'];
     $id_cliente = $ve['id_cliente'];
@@ -2505,18 +2501,34 @@ $iva_efectivo = $ve['monto_facturado'];
         $totalFin = $espacios . $totalFin;
         $detalle .= 'esc_pos_line($printer, "' . $totalFin . '");';
 
-        $efectivo = number_format($efectivo, 2);
-        $efectivo = "SU PAGO: " . $efectivo;
-        $cuantos_efectivo = 40 - strlen($efectivo);
-        $espacios = "";
-        for ($i = 1; $i <= $cuantos_efectivo; $i++) {
-            $espacios .= " ";
-        }
-        $efectivo = $espacios . $efectivo;
-        $detalle .= 'esc_pos_line($printer, "' . $efectivo . '");';
+// ===== MULTIPAGO =====
+$monto_efectivo = number_format($monto_efectivo, 2);
+$monto_tarjeta = number_format($monto_tarjeta, 2);
+$monto_transferencia = number_format($monto_transferencia, 2);
 
-        $cambio = number_format($cambio, 2);
-        $cambio = "CAMBIO: " . $cambio;
+if($monto_efectivo > 0){
+    $line = "EFECTIVO: " . $monto_efectivo;
+    $espacios = str_repeat(" ", 40 - strlen($line));
+    $detalle .= 'esc_pos_line($printer, "' . $espacios . $line . '");';
+}
+
+if($monto_tarjeta > 0){
+    $line = "TARJETA: " . $monto_tarjeta;
+    $espacios = str_repeat(" ", 40 - strlen($line));
+    $detalle .= 'esc_pos_line($printer, "' . $espacios . $line . '");';
+}
+
+if($monto_transferencia > 0){
+    $line = "TRANSFERENCIA: " . $monto_transferencia;
+    $espacios = str_repeat(" ", 40 - strlen($line));
+    $detalle .= 'esc_pos_line($printer, "' . $espacios . $line . '");';
+}
+if($monto_efectivo > 0){
+    $cambio = number_format($cambio, 2);
+    $line = "CAMBIO: " . $cambio;
+    $espacios = str_repeat(" ", 40 - strlen($line));
+    $detalle .= 'esc_pos_line($printer, "' . $espacios . $line . '");';
+}
         $cuantos_cambio = 40 - strlen($cambio);
         $espacios = "";
         for ($i = 1; $i <= $cuantos_cambio; $i++) {

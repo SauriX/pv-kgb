@@ -202,24 +202,37 @@ function dotas (){
 	}
 
 
-function calcular_cambio(){
 
-	var recibe	=	$('#recibe_txt').val();
-	var total	=	$('#consumo_txt').val();
-	var cambio	=	Number(recibe)-Number(total);
 
-	if(cambio>0){
-		$('#cambio_txt').val(Number(cambio).toFixed(2));
-	}else if(cambio==0){
-		$('#cambio_txt').val('0.00');
-	}else{
-		$('#cambio_txt').val('');
-		return false;
-	}
+function calcular_multipago(){
 
+    var total = Number($('#consumo_txt').val()) || 0;
+
+    var efectivo = Number($('[name="monto_efectivo"]').val()) || 0;
+    var tarjeta = Number($('[name="monto_tarjeta"]').val()) || 0;
+    var transferencia = Number($('[name="monto_transferencia"]').val()) || 0;
+
+    var suma = efectivo + tarjeta + transferencia;
+
+    var faltante = total - suma;
+    if(faltante < 0) faltante = 0;
+
+    $('#faltante_txt').val(faltante.toFixed(2));
+
+    // 🔥 CAMBIO SOLO EFECTIVO
+    var cambio = 0;
+var exceso = suma - total;
+var cambio = 0;
+
+if(exceso > 0){
+    // solo puedes devolver de efectivo
+    cambio = Math.min(exceso, efectivo);
 }
 
-
+$('#cambio_txt').val(cambio.toFixed(2));
+    // 🔒 botón
+    $('#cobrar_final').prop('disabled', faltante > 0);
+}
 
 function contador(){
 	$.get('ac/corte_obtener.php',function(dat){
@@ -296,37 +309,27 @@ jQuery(document).ready(function(){
 		abrirCajaFondo();
 	});
 
-	$("#descuento_txt").change(function() {
-		var id = $(this).val();
-		var porcentaje = $('option:selected',this).attr('data-id');
-		var porcentajeC = $('option:selected',this).attr('data-porcent');
-		if(porcentajeC <10){
-		porcentaje = Number(porcentaje)/10; 	
-	}
+$("#descuento_txt").change(function() {
 
-		if (id == 0) {
-			$('#consumo_txt').val(Number(pagarOriginal).toFixed(2));
-			$('#DescEfec_txt').val('0.00');
+    var porcentaje = Number($('#descuento_txt option:selected').attr('data-porcent')) || 0;
 
-			var totalPag = $('#consumo_txt').val();
-			var recibe = $('#recibe_txt').val();
-			if (recibe != '') {
-				cambio = recibe-totalPag;
-				$('#cambio_txt').val(Number(cambio).toFixed(2));
-			}
-		}else {
-			descuento = Number(porcentaje)*Number(pagarOriginal);
-			$('#DescEfec_txt').val(Number(descuento).toFixed(2));
-			totalPag = pagarOriginal-descuento;
-			$('#consumo_txt').val(Number(totalPag).toFixed(2));
-			var recibe = $('#recibe_txt').val();
-			if (recibe != '') {
-				cambio = recibe-totalPag;
-				$('#cambio_txt').val(Number(cambio).toFixed(2));
-			}
-		}
-	});
+    var base = Number($('#consumo_original_txt').val()) || 0;
 
+    var descuento = base * (porcentaje / 100);
+
+    var subtotal = base - descuento;
+
+    $('#DescEfec_txt').val(descuento.toFixed(2));
+  $('#subtotal_txt').val(subtotal.toFixed(2));
+$('#consumo_txt').val(subtotal.toFixed(2));
+    // 🔥 recalcular IVA automáticamente si hay seleccionado
+    if($('input[name=iva]:checked').length){
+        inpuesto();
+    } else {
+        calcular_multipago();
+    }
+
+});
 	contador();
 
 
@@ -659,26 +662,7 @@ $( "#cerrador" ).click(function() {
 
 	});
 
-	$('#recibe_txt').keyup(function(e) {
-		var recibe = $('#recibe_txt').val();
-		var total = $('#consumo_txt').val();
-		var cambio = Number(recibe)-Number(total);
-		if(cambio>0){
-			$('#cambio_txt').val(Number(cambio).toFixed(2));
-		}else if(cambio==0){
-			$('#cambio_txt').val('0.00');
-		}else{
-			$('#cambio_txt').val('');
-			return false;
-		}
-		/*
-		if(e.keyCode==13){
 
-			openXX($('#id_metodo_pago'));
-
-		}
-		*/
-	});
 
 
 	$('#id_metodo_pago').change(function() {
@@ -904,19 +888,20 @@ function valida_monto_facturar(){
 
 
 function inpuesto(){
-	var iva = $('input:radio[name=iva]:checked').val()
-	var totalPag = $('#consumo_original_txt').val();
-	var inpuesto = (totalPag * iva)/100;
-	var consumo_total= Number(totalPag) + inpuesto;
-	$('#iva_efect').val(Number(inpuesto).toFixed(2));
-	$('#consumo_txt').val(Number(consumo_total).toFixed(2));
-	var recibe = $('#recibe_txt').val();
-	if (recibe != '') {
-		cambio = recibe-consumo_total;
-		$('#cambio_txt').val(Number(cambio).toFixed(2));
-	}
-}
 
+    var iva = Number($('input:radio[name=iva]:checked').val()) || 0;
+
+    // 🔥 USAR SIEMPRE SUBTOTAL LIMPIO
+    var subtotal = Number($('#subtotal_txt').val()) || 0;
+
+    var impuesto = subtotal * (iva / 100);
+    var total = subtotal + impuesto;
+
+    $('#iva_efect').val(impuesto.toFixed(2));
+    $('#consumo_txt').val(total.toFixed(2));
+
+    calcular_multipago();
+}
 
 
 function cobrar_cuenta(){
@@ -932,7 +917,7 @@ function cobrar_cuenta(){
 				var datas = data.split('|');
 				if(datas[0]==1){
 					$.post( "http://localhost/imprimir",{data:datas[1]});
-					window.location  = 'index.php';
+					//window.location  = 'index.php';
 				}else{
 
 					$('#cobrar_final').attr('disabled', 'false');
@@ -1674,6 +1659,7 @@ function cobrar(){
 					console.log(data);
 					pagar(datas[0]);
 				}else{
+					console.log(data);
 					alert(data);
 					cobradoExito();
 				}
@@ -1686,6 +1672,7 @@ function cobrar(){
 					pagar(datas[0]);
 				}else{
 					alert(data);
+					console.log(data);
 					cobradoExito();
 				}
 			}    
@@ -1707,20 +1694,50 @@ function pagar(id){
 		backdrop: 'static',
     	keyboard: false
 	});
-	$('#pagarMesa').on('shown.bs.modal',function(e){
-		$('#recibe_txt').focus();
-		var data2 = $("#secre2").val();
-		if(data2==1){
-			data	=	$("#secre").val();
-			total	=	$("#total_totales").val();
-						$("#id_venta_cobrar").val(id);
-						$("#consumo_txt").val(total);
-						$("#consumo_original_txt").val(total);
-			pagarOriginal = total;
-		}
-	});
-}
+$('#pagarMesa').on('shown.bs.modal',function(e){
 
+    var data2 = $("#secre2").val();
+
+    if(data2==1){
+
+        data  = $("#secre").val();
+        total = Number($("#total_totales").val()) || 0;
+
+        $("#id_venta_cobrar").val(id);
+
+        // 🔥 BASE DEL SISTEMA
+        $("#consumo_txt").val(total);
+        $("#consumo_original_txt").val(total);
+        $("#subtotal_txt").val(total); // 👈 ESTA ES LA QUE TE FALTABA
+
+        pagarOriginal = total;
+
+        console.log("INIT MODAL:", {
+            total,
+            original: $("#consumo_original_txt").val(),
+            subtotal: $("#subtotal_txt").val()
+        });
+    }
+
+    calcular_multipago();
+    $('#recibe_txt').focus();
+
+});
+}
+$('[name="monto_efectivo"]').on('focus', function(){
+
+    var total = Number($('#consumo_txt').val());
+
+    var tarjeta = Number($('[name="monto_tarjeta"]').val()) || 0;
+    var transferencia = Number($('[name="monto_transferencia"]').val()) || 0;
+
+    var restante = total - (tarjeta + transferencia);
+
+    if(restante > 0){
+        $(this).val(restante.toFixed(2));
+        calcular_multipago();
+    }
+});
 function agregarOpciones(){
 
 	var random = 0;
@@ -1910,7 +1927,9 @@ $(document).ready(function() {
 	$("#espera").hide();
 	$("#error").hide();
 	$("#datos_cleinte").hide();
-
+$('[name="monto_efectivo"], [name="monto_tarjeta"], [name="monto_transferencia"]').on('keyup change', function(){
+    calcular_multipago();
+});
 
 
 });
@@ -2138,10 +2157,22 @@ if(!$touch){
 	      		<div class="row">
 		  			<div class="col-md-6" style="margin-top: 24px">
 
-		  				<div class="input-group col-md-12 mb20">
-		  					<span class="input-group-addon f18">Recibe: &nbsp;</span>
-		  					<input type="number" autocomplete="off" id="recibe_txt" name="recibe_txt" class="form-control input-lg total solo_numero">
-		  				</div>
+<hr>
+
+<div class="input-group col-md-12 mb20">
+    <span class="input-group-addon f18">Efectivo</span>
+    <input type="number" class="form-control" name="monto_efectivo" value="0">
+</div>
+
+<div class="input-group col-md-12 mb20">
+    <span class="input-group-addon f18">Tarjeta</span>
+    <input type="number" class="form-control" name="monto_tarjeta" value="0">
+</div>
+
+<div class="input-group col-md-12 mb20">
+    <span class="input-group-addon f18">Transferencia</span>
+    <input type="number" class="form-control" name="monto_transferencia" value="0">
+</div>
 
 							<div class="input-group col-md-12 mb20">
 		  					<span class="input-group-addon f18">Consumo: &nbsp;</span>
@@ -2174,11 +2205,15 @@ if(!$touch){
 		  						<span class="input-group-addon f18">iva $: </span>
 		  						<input type="text"class="form-control input-lg total"  name="iva_efect" id="iva_efect" readonly="1" value="0.00">
 		  					</div>
+							<input type="hidden" id="subtotal_txt">
 							<div class="input-group col-md-12 mb20">
 								<span class="input-group-addon f18">Total: </span>
 								<input type="text"class="form-control input-lg total"  name="consumo_txt" id="consumo_txt" readonly="1" value="0.00">
 							</div>
-
+							<div class="input-group col-md-12 mb20">
+    <span class="input-group-addon f18">Faltante</span>
+    <input type="text" id="faltante_txt" class="form-control input-lg" readonly value="0.00">
+</div>
 		  				<div class="input-group col-md-12">
 		  					<span class="input-group-addon f18">Cambio: </span>
 		  					<input type="text" class="form-control input-lg total" name="cambio_txt" id="cambio_txt" readonly="1" value="">
@@ -2187,28 +2222,6 @@ if(!$touch){
 
 		  			<div class="col-md-6">
 			  			<form>
-			  				<div class="form-group">
-			  					<label for="exampleInputEmail1">Forma de Pago</label>
-			  					<!--<select class="form-control" name="id_metodo_pago" id="id_metodo_pago">-->
-<?
-                                $first = true;
-								$sql = "SELECT * FROM metodo_pago ORDER BY id_metodo desc";
-								$q = mysql_query($sql);
-								while($ft = mysql_fetch_assoc($q)){
-?>
-				  					<!--<option value="<?=$ft['id_metodo']?>" <? if($first){?>selected="true"<? $first=false;}?> ><?=$ft['metodo_pago']?></option>-->
-									<label class="containerx"><?=$ft['metodo_pago']?>
-  										<!--<input type="checkbox" checked="checked">-->
-										<input type="radio" checked name="id_metodo_pago" value="<?=$ft['id_metodo']?>" <? if($first){?><?}?> />
-  										<span class="checkmark"></span>
-									</label>
-
-
-<?
-								$first = false;}
-?>
-			  					<!--</select>-->
-			  				</div>
 							  <label for="exampleInputEmail1">Inpuestos</label>
 							  	<div class="form-check form-check-inline">
   									<input class="form-check-input" onchange="inpuesto()" type="radio" name="iva" id="iva1" value="16">
