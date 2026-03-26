@@ -1,0 +1,14 @@
+- name: Deploy via SFTP
+  uses: pressidium/lftp-mirror-action@v1
+  with:
+    host: access-5020093686.webspace-host.com
+    user: ${{ secrets.FTP_USER }}
+    pass: ${{ secrets.FTP_PASS }}
+    port: 22
+    localDir: "./"
+    remoteDir: "/pv"
+    exclude: |
+      .git*
+      node_modules/
+      .env
+      *.log
