@@ -537,7 +537,7 @@ $( "#cerrador" ).click(function() {
 			$('#mensaje_loader_corte').html('Realizando Corte de Caja..');
 			$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data) {
 				console.log(data);
-				$.post( "http://localhost/imprimir.php",{data:data},function(data2){
+				$.post( "http://localhost:8080/imprimir.php",{data:data},function(data2){
 					console.log('hola: ',data2);
 				});
 				$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
@@ -852,7 +852,7 @@ function guardatemp(){
 		$.post('ac/cobrar.php',datos,function(data) {
 				var datas = data.split('|');
 				if(datas[0]==1){
-						$.post( "http://localhost/imprimir.php",{data:datas[1]});
+						$.post( "http://localhost:8080/imprimir.php",{data:datas[1]});
 console.log('Error: '+ data);
 				}else{
 					$('.hidden_loader').show();
@@ -919,7 +919,7 @@ function cobrar_cuenta(){
 				console.log(data);
 				var datas = data.split('|');
 				if(datas[0]==1){
-					$.post( "http://localhost/imprimir.php",{data:datas[1]});
+					$.post( "http://localhost:8080/imprimir.php",{data:datas[1]});
 					window.location  = 'index.php';
 				}else{
 
@@ -1654,7 +1654,7 @@ function cobrar(){
 			console.log(data);
     	<?if($auto_cobro==1){?>
 			if(datas[0]==1){
-				$.post( "http://localhost/imprimir.php",{data:datas[1]});
+				$.post( "http://localhost:8080/imprimir.php",{data:datas[1]});
 			cobradoExito();
 			}else{
 				
