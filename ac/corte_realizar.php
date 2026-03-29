@@ -1,11 +1,11 @@
-<?
+<?php
 session_start();
 ignore_user_abort(1);
-include('../includes/db.php');
+require_once('../includes/db.php');
 include('../includes/impresora.php');
 include('../includes/funcion_msn.php');
 include('../includes/postmark.php');
-
+$error = false;
 /*require '../vendor/autoload.php';
 
 use Aws\S3\S3Client;
@@ -98,7 +98,16 @@ if($error){
 	$nombres = array();
 	$pu = array();
 
+$montos_metodo = [];
+$me = [];
 
+$mesas_monto = 0;
+$barra_monto = 0;
+$total_totales = 0;
+
+$prod = [];
+$nombres = [];
+$pu = [];
 	while($fx = mysql_fetch_assoc($qx)){
 
 
@@ -110,7 +119,7 @@ if($error){
 
 		while($ft=mysql_fetch_assoc($q)){
 
-			$prod[$ft['id_producto']]+=$ft['cantidad'];
+			$prod[$ft['id_producto']] = ($prod[$ft['id_producto']] ?? 0) + $ft['cantidad'];
 			$nombres[$ft['id_producto']] = $ft['nombre'];
 			$pu[$ft['id_producto']] = $ft['precio_venta'];
 
@@ -136,19 +145,19 @@ if($error){
 	$q = mysql_query($sql);
 	while($ft = mysql_fetch_assoc($q)){
 
-		$montos_metodo[$ft['id_metodo']]+=$ft['monto_pagado'];
+		$montos_metodo[$ft['id_metodo']] = ($montos_metodo[$ft['id_metodo']] ?? 0) + $ft['monto_pagado'];
 
 		$cta_expedidas++;
 
 		if($ft['mesa']!='BARRA'){
 			$mesas_ct++;
-			$mesas_monto+=$ft['monto_pagado'];
+			$mesas_monto = ($mesas_monto ?? 0) + $ft['monto_pagado'];
 		}else{
 			$barra_ct++;
 			$barra_monto+=$ft['monto_pagado'];
 		}
 
-		$total_totales+=$ft['monto_pagado'];
+		$total_totales = ($total_totales ?? 0) + $ft['monto_pagado'];
 
 		if($ft['reabierta']){
 			$cancelaciones++;

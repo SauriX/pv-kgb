@@ -40,7 +40,7 @@ function imprimir_corte($id_corte, $re = false)
     global $autoprint;
     global $enviar_sms;
 
-
+$salto = chr(13) . chr(10);
 
 
     $sql_corte = "SELECT*FROM cortes WHERE id_corte = $id_corte";
@@ -63,7 +63,21 @@ function imprimir_corte($id_corte, $re = false)
     $nombres = array();
     $pu = array();
 
+// 🔥 FIX PHP 8
+$montos_metodo = [];
+$me = [];
 
+$mesas_monto = 0;
+$barra_monto = 0;
+$total_totales = 0;
+
+$pre_fact_monto = 0;
+$no_fact_monto = 0;
+
+$g_total = 0;
+$g_total_g = 0;
+
+$precorteTexto = '';
     while ($fx = mysql_fetch_assoc($qx)) {
 
 
@@ -75,7 +89,7 @@ function imprimir_corte($id_corte, $re = false)
 
         while ($ft = mysql_fetch_assoc($q)) {
 
-            $prod[$ft['id_producto']] += $ft['cantidad'];
+           $prod[$ft['id_producto']] = ($prod[$ft['id_producto']] ?? 0) + $ft['cantidad'];
             if ($ft['extra'] == 1) {
                 $nombres[$ft['id_producto']] = "(EXTRA)" . $ft['nombre'];
 
@@ -345,10 +359,10 @@ while ($ft = mysql_fetch_assoc($q)) {
         $mesas_monto += $ft['monto_pagado'];
     } else {
         $barra_ct++;
-        $barra_monto += $ft['monto_pagado'];
+        $barra_monto = ($barra_monto ?? 0) + $ft['monto_pagado'];
     }
 
-    $total_totales += $ft['monto_pagado'];
+    $total_totales = ($total_totales ?? 0) + $ft['monto_pagado'];
 
     if ($ft['facturado']) {
         $pre_fact_ct++;
@@ -482,12 +496,11 @@ while ($ft = mysql_fetch_assoc($q)) {
             }
         }
 
-        $cantidad = $prod[$id];
-        $precio = $pu[$id];
-
+   $cantidad = $prod[$id] ?? 0;
+$precio = $pu[$id] ?? 0;
         $total = $prod[$id] * $pu[$id];
-        $g_total += $total;
-        $total = number_format($total, 2, '.', '');
+        $g_total = ($g_total ?? 0) + $total;
+        $total = number_format($total??0, 2, '.', '');
 
         $prec = strlen($precio);
         $cant = strlen($cantidad);
@@ -571,7 +584,7 @@ while ($ft = mysql_fetch_assoc($q)) {
     }
 
 
-$efectivo = number_format($efectivo, 2, '.', '');
+$efectivo = number_format($efectivo ?? 0, 2, '.', '');
 $tarjetas = number_format($tarjetas, 2, '.', '');
 $transferencia = number_format($transferencia, 2, '.', '');
     $descuentoTotal = $g_total - $totalDescuento;
@@ -719,7 +732,7 @@ esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
             }
         }
 
-        $g_total_g += $monto;
+       $g_total_g = ($g_total_g ?? 0) + $monto;
 
         $monto = number_format($monto, 2, '.', '');
         $mont = strlen($monto);
@@ -1221,7 +1234,9 @@ esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
 $impresorapapa;
 function imprimir_comandas($tipo, $id)
 {
-
+$impresora_nueva = '';
+$var = '';
+   $impresion = [];
     /*
     imprimir_comandas('venta',183270);
     imprimir_comandas('domicilio',11);
@@ -1993,7 +2008,7 @@ esc_pos_close($printer);
 
 function imprimir_mesa($id_venta, $tipo, $desc = false)
 {
-    include ('db.php');
+   
 
     global $establecimiento_config;
     global $autoprint;
@@ -2001,12 +2016,20 @@ function imprimir_mesa($id_venta, $tipo, $desc = false)
     global $impresora_cobros;
     global $impresora_cuentas;
     global $salto;
-
+    
+global $conexion;
     $sql = "SELECT SUM(cantidad*precio_venta) AS total FROM venta_detalle WHERE id_venta=$id_venta";
-    $q = mysql_query($sql, $conexion);
+    $q = mysql_query($sql);
     $ft = mysql_fetch_assoc($q);
     $consumo = $ft['total'];
+$var = '';
+$domi = '';
+$space0 = ''; 
+$g_total = 0;
+$efectivo = 0;
 
+$fact = '';
+$status = '';
     $sql_venta = "SELECT * FROM ventas WHERE id_venta = $id_venta";
     $q_venta = mysql_query($sql_venta, $conexion);
     $ve = mysql_fetch_assoc($q_venta);

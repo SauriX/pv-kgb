@@ -341,13 +341,11 @@ function tipo_usuario($id_tipo_usuario){
 }
 
 function acentos($cadena){
-    $originales =  'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûýýþÿŔŕ';
+    $originales = 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûýýþÿŔŕ';
     $modificadas = 'AAAAAAACEEEEIIIIDNOOOOOOUUUUYbsaaaaaaaceeeeiiiidnoooooouuuyybyRr';
-    $cadena = utf8_decode($cadena);
-    $cadena = strtr($cadena, utf8_decode($originales), $modificadas);
-    return utf8_encode($cadena);
-}
 
+    return strtr($cadena, $originales, $modificadas);
+}
 function obtenerDeuda($id_cliente){
 
 	global $conexion;
@@ -448,7 +446,6 @@ function hace($fecha,$fecha2=false){
 
 function eliminar_tildes($cadena){
 
-    $cadena = utf8_encode($cadena);
 
     $cadena = str_replace(
         array('á', 'à', 'ä', 'â', 'ª', 'Á', 'À', 'Â', 'Ä'),
@@ -486,28 +483,36 @@ function eliminar_tildes($cadena){
 }
 
 function agregar_a_venta($id_venta_domicilio,$nombre){
-	global $conexion;
-	$total_venta = total_venta_domicilio($id_venta_domicilio);
-	$descuento =  total_descuento_venta($id_venta_domicilio);
-	$total_envio = total_envio_domicilio($id_venta_domicilio);
-	mysql_close($conexion);
-	include('../../app/includes/db.php');
-	$fecha = date('Y-m-d');
-	$hora = date('H:i:s');
-	$total = ($total_venta + $total_envio) - $descuento;
-	if($total>0){
-		$nombre = "DOM-".$id_venta_domicilio."-".$nombre;
-		$sql = "INSERT INTO ventas (id_usuario,fecha,hora,mesa,abierta,fechahora_cerrada)VALUES('1','$fecha','$hora','$nombre',0,'$fecha $hora')";
-		$q = mysql_query($sql);
-		if($q) {
-			$id_venta = mysql_insert_id();
-			$sql="INSERT INTO venta_detalle
-			(id_venta,id_producto,cantidad,precio_venta)VALUES('$id_venta','343','1','$total')";
-			$query = mysql_query($sql);
-		}
-	}
-	#$q = mysqli_query($);
+    global $conexion;
 
+    $total_venta = total_venta_domicilio($id_venta_domicilio);
+    $descuento = total_descuento_venta($id_venta_domicilio);
+    $total_envio = total_envio_domicilio($id_venta_domicilio);
+
+    $fecha = date('Y-m-d');
+    $hora = date('H:i:s');
+
+    $total = ($total_venta + $total_envio) - $descuento;
+
+    if($total > 0){
+        $nombre = "DOM-".$id_venta_domicilio."-".$nombre;
+
+        $sql = "INSERT INTO ventas 
+        (id_usuario,fecha,hora,mesa,abierta,fechahora_cerrada)
+        VALUES('1','$fecha','$hora','$nombre',0,'$fecha $hora')";
+
+        $q = mysql_query($sql);
+
+        if($q){
+            $id_venta = mysql_insert_id();
+
+            $sql = "INSERT INTO venta_detalle
+            (id_venta,id_producto,cantidad,precio_venta)
+            VALUES('$id_venta','343','1','$total')";
+
+            mysql_query($sql);
+        }
+    }
 }
 function total_venta_domicilio($id_venta_domicilio){
 	global $conexion;

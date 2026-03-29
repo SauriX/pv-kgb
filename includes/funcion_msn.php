@@ -1,7 +1,7 @@
 <?php
 
 include ( "NexmoMessage.php" );
-include ( "db.php" );
+
 function  envio_mensaje($fecha_hora_ticket,$g_total,$efectivo,$tarjeta,$cheque,$transf,$noide,$g_total_gastos,$ENCAJA){
 
  global $conexion; 

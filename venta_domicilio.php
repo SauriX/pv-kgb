@@ -81,7 +81,7 @@
 		border-color:#3A3A3A;
 	}
 </style>
-<?
+<?php
 $auto_cobro=0;
 $pack=0;
 $sql74="SELECT auto_cobro,paquetes FROM configuracion";
@@ -536,7 +536,10 @@ $( "#cerrador" ).click(function() {
 			$('#imagen_loader_corte').attr('src','img/load-verde.gif').show();
 			$('#mensaje_loader_corte').html('Realizando Corte de Caja..');
 			$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data) {
-				$.post( "http://localhost/imprimir",{data:data});
+				console.log(data);
+				$.post( "http://localhost/imprimir.php",{data:data},function(data2){
+					console.log('hola: ',data2);
+				});
 				$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
 					$('#mensaje_loader_corte').html('Listo.<br/><br/><button onclick="location.reload();" type="button" class="btn btn-default btn_ac btn-md">Terminar</button>');
 				/* if(data==1){
@@ -849,12 +852,12 @@ function guardatemp(){
 		$.post('ac/cobrar.php',datos,function(data) {
 				var datas = data.split('|');
 				if(datas[0]==1){
-						$.post( "http://localhost/imprimir",{data:datas[1]});
-
+						$.post( "http://localhost/imprimir.php",{data:datas[1]});
+console.log('Error: '+ data);
 				}else{
 					$('.hidden_loader').show();
 					$('#loader').hide();
-					alert('Error: '+ data);
+					console.log('Error: '+ data);
 				}
 
 		});
@@ -916,12 +919,12 @@ function cobrar_cuenta(){
 				console.log(data);
 				var datas = data.split('|');
 				if(datas[0]==1){
-					$.post( "http://localhost/imprimir",{data:datas[1]});
-					//window.location  = 'index.php';
+					$.post( "http://localhost/imprimir.php",{data:datas[1]});
+					window.location  = 'index.php';
 				}else{
 
 					$('#cobrar_final').attr('disabled', 'false');
-					alert('Error: '+data);
+					console.log('Error: '+data);
 					$('#cobrar_final').html('Cobrar');
 					$('#cobrar_final').removeAttr('disabled');
 					$('#cobrar_final').removeClass('btn-danger').addClass('btn-success');
@@ -1651,7 +1654,7 @@ function cobrar(){
 			console.log(data);
     	<?if($auto_cobro==1){?>
 			if(datas[0]==1){
-				$.post( "http://localhost/imprimir",{data:datas[1]});
+				$.post( "http://localhost/imprimir.php",{data:datas[1]});
 			cobradoExito();
 			}else{
 				

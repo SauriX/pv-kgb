@@ -247,10 +247,7 @@ function imprimir_corte($id_corte,$re=false){
                     $sql_producto="SELECT  * FROM  productosxbase WHERE  id_producto=$id_base";
                     $producto_q=mysql_query($sql_producto);
                     
-                    echo("</br>");
-                    echo "ignorado".$ignorar;
-                    echo "id".$id_base;
-                    
+
                     while($ft4=mysql_fetch_assoc($producto_q)){
                         $id_base=$ft4['id_base'];
                         $cantidad2=$ft4['cantidad']*$cantidad;

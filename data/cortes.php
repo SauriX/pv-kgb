@@ -1,7 +1,7 @@
-<?
-include("../includes/db.php");
-include("../includes/funciones.php");
-include("../includes/session_ui.php");
+<?php
+require_once("../includes/db.php");
+require_once("../includes/funciones.php");
+require_once("../includes/session_ui.php");
 ?>
 
 <div id="loader_corte" style="margin-top:80px;text-align:center;margin-bottom:100px">
@@ -13,8 +13,7 @@ include("../includes/session_ui.php");
 				
                         
                         
-						<?php
-							include("../includes/db.php");
+						<?
 							$sq_corte="SELECT alerta_corte from configuracion ";
 							$q_corte=mysql_query($sq_corte);
 							$row = mysql_fetch_array($q_corte);

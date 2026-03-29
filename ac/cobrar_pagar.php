@@ -1,14 +1,33 @@
 <?php
 
 include('../includes/session.php');
-include('../includes/db.php');
+require_once('../includes/db.php');
 include('../includes/funciones.php');
 
 include('../includes/impresora.php');
 include('../includes/postmark.php');
 
 extract($_POST);
+$reimprime = $reimprime ?? 0;
+$id_metodo_pago = $id_metodo_pago ?? 99;
 
+$monto_efectivo = $monto_efectivo ?? 0;
+$monto_tarjeta = $monto_tarjeta ?? 0;
+$monto_transferencia = $monto_transferencia ?? 0;
+
+$consumo_txt = $consumo_txt ?? 0;
+$req_factura = $req_factura ?? 0;
+$num_cta_txt = $num_cta_txt ?? '';
+$iva_efect = $iva_efect ?? 0;
+$codigo = $codigo ?? '';
+$recibe_txt = $recibe_txt ?? 0;
+$cambio_txt = $cambio_txt ?? 0;
+$descuento_txt = $descuento_txt ?? 0;
+$DescEfec_txt = $DescEfec_txt ?? 0;
+$pagarOriginal = $pagarOriginal ?? 0;
+$tc = $tc ?? 0;
+$id_venta_cobrar = $id_venta_cobrar ?? 0;
+$check_imprimir = $check_imprimir ?? 'false';
 // 🔥 NORMALIZAR MONTOS
 $monto_efectivo = floatval($monto_efectivo);
 $monto_tarjeta = floatval($monto_tarjeta);
@@ -16,9 +35,9 @@ $monto_transferencia = floatval($monto_transferencia);
 
 // 🔥 SUMA DE MÉTODOS
 $total_metodos = $monto_efectivo + $monto_tarjeta + $monto_transferencia;
-
+$error = false;
 if(!$reimprime){
-
+	
 	mysql_query("BEGIN");
 
 	if(!is_numeric($id_metodo_pago)) exit('Falta método de pago');
@@ -131,7 +150,7 @@ if($cambio_txt == '') $cambio_txt = 0;
 
 		WHERE id_venta = '$id_venta_cobrar'";
 
-	$query = mysql_query($sql,$conexion);
+	$query = mysql_query($sql);
 if(!$query){
     die('MYSQL ERROR: '.mysql_error());
 }	

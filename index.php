@@ -1,4 +1,4 @@
-<?
+<?php
     //Inclucion de archivos necesarios
     include("includes/session_ui.php");
     include("includes/db.php");

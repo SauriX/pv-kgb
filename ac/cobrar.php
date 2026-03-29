@@ -13,9 +13,11 @@ $fecha = date('Y-m-d');
 $hora = date('H:i:s');
 $total_totales = 0;
 $mensaje = "";
+$error = false;
+$var = '';
 extract($_POST);
 $sql="SELECT * FROM configuracion ";
-$q =mysql_query($sql,$conexion);
+$q =mysql_query($sql);
 $ft=mysql_fetch_assoc($q);
 $sucursal=$ft['sucursal'];
 
@@ -27,7 +29,7 @@ $cobro1=$cobro;
 if($numero_mesa){
 
 		$sql = "SELECT id_venta FROM ventas WHERE id_corte = 0 AND abierta = 1 AND pagada = 0 AND mesa = '$numero_mesa'";
-		$q = mysql_query($sql,$conexion);
+		$q = mysql_query($sql);
 		
       
 
@@ -54,15 +56,15 @@ if($numero_mesa){
 			$sql = "INSERT INTO ventas (id_usuario,fecha,hora,mesa,codigo_activacion,domicilio)VALUES('$id_usuario','$fecha','$hora','$numero_mesa','$codigo','$domicilio')";
 		
 			
-			$q = mysql_query($sql,$conexion);
+			$q = mysql_query($sql);
 			
 		
 			if($q) {
 				
                 
-				$id_venta= mysql_insert_id($conexion);
+				$id_venta= mysql_insert_id();
 
-
+				$id_venta2 = $id_venta;
 							
 			
 		
@@ -79,16 +81,19 @@ if($numero_mesa){
 
 		}
 }else{
-            
+         
 			$sql = "INSERT INTO ventas (id_usuario,fecha,hora,mesa,abierta,fechahora_cerrada,codigo_activacion,domicilio)VALUES('$id_usuario','$fecha','$hora','BARRA',0,'$fecha $hora','$codigo','$domicilio')";
 	
 			   
-			$q = mysql_query($sql,$conexion);
+			$q = mysql_query($sql);
 			if($q) {
 				
-				$id_venta = mysql_insert_id($conexion);
-				
-			
+				$id_venta = mysql_insert_id();
+				$id_venta2 = $id_venta; // 👈 AQUÍ SÍ
+			if(!$id_venta){
+    $error = true;
+    $mensaje = "No se pudo generar id_venta";
+}
 
 				$mesa_cerrada_imprimir = 1;
 
@@ -110,23 +115,26 @@ unset($_POST['abono']);
 foreach($_POST as $p => $v){
 
 
+    if(!is_array($v)) continue;
 	foreach($v as $input_name => $cantidad){
 
 		$item = explode("_",$input_name);
+
+if(count($item) < 3) continue;
 		$id_temporal=$item[0];
-		$comentario=$adicional[$id_temporal];
+		$comentario = $adicional[$id_temporal] ?? '';
 		
 		$id_producto = $item[1];
 		$precio = $item[2];
 		if($id_producto==""){ continue; }
 		$sql="INSERT INTO venta_detalle(id_venta,id_producto,cantidad,precio_venta,comentarios)VALUES('$id_venta','$id_producto','$cantidad','$precio','$comentario')";
-		$query = mysql_query($sql,$conexion);
+		$query = mysql_query($sql);
 		$pack=0; 
 		$sql_pro="SELECT productos.* ,categorias.nombre as categorias FROM productos
 		LEFT JOIN categorias ON productos.id_categoria = categorias.id_categoria
 		 WHERE id_producto = $id_producto";
 		
-		$query_pro = mysql_query($sql_pro,$conexion);
+		$query_pro = mysql_query($sql_pro);
 
 	
       while($ft=mysql_fetch_assoc($query_pro)){
@@ -147,20 +155,20 @@ foreach($_POST as $p => $v){
 
 		 $sql_pack="SELECT * FROM productos_paquete WHERE id_producto = $id_producto";
 		 
-		 $query_pack = mysql_query($sql_pack,$conexion);
+		 $query_pack = mysql_query($sql_pack);
 		 while($fx = mysql_fetch_assoc($query_pack)){
 			  $id_producto2 = $fx['id_paquete'];
 			  $cantidad2 = $fx['cantidad'];
 			  $sqlpropa="SELECT productos.* ,categorias.nombre as categorias FROM productos
 			  LEFT JOIN categorias ON productos.id_categoria = categorias.id_categoria
 			   WHERE id_producto = $id_producto2";
-			  $q77= mysql_query($sqlpropa,$conexion);
+			  $q77= mysql_query($sqlpropa);
 			  $ftx3=mysql_fetch_assoc($q77);
 			  $nombre2=$ftx3['nombre'];
 			  $categorias2 = $ftx3['categorias'];
 			$sql69="INSERT INTO venta_detalle
 			(id_venta,id_producto,cantidad,precio_venta,comentarios)VALUES('$id_venta','$id_producto2','$cantidad2','00.00','$comentario')";
-			$query69 = mysql_query($sql69,$conexion);
+			$query69 = mysql_query($sql69);
 
 
 			
