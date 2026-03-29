@@ -2,15 +2,15 @@
 //error_reporting(0);
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-/* $servidor="db5020093809.hosting-data.io";
+$servidor="db5020093809.hosting-data.io";
 $usuario="dbu3763371";
 $clave="vendefacil_5";
-$base="dbs15483147"; */
+$base="dbs15483147";
 
-$servidor="localhost";
+/* $servidor="localhost";
 $usuario="root";
 $clave="";
-$base="vendefacil_5";
+$base="vendefacil_5"; */
 
 $conexion = mysqli_connect($servidor,$usuario,$clave,$base);
 
