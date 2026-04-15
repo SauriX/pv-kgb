@@ -67,6 +67,8 @@ CREATE TABLE productos (
     precio DECIMAL(10,2) NOT NULL,
     id_categoria INT,
     stock INT DEFAULT 0,
+    unidad VARCHAR(20) NOT NULL DEFAULT 'unidad', -- g, ml, pieza, lata, botella, unidad, etc.
+    factor_conversion DECIMAL(10,2) DEFAULT 1, -- para empaquetado (ej: 1 botella = 750 ml)
     activo TINYINT(1) DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -129,6 +131,90 @@ CREATE TABLE venta_detalle (
 );
 
 -- ÍNDICES ADICIONALES
+-- INGREDIENTES
+CREATE TABLE ingredientes (
+    id_ingrediente INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    unidad VARCHAR(20) NOT NULL DEFAULT 'unidad',
+    stock DECIMAL(10,2) DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- RECETAS (asocia productos con ingredientes y cantidades)
+CREATE TABLE recetas (
+    id_receta INT AUTO_INCREMENT PRIMARY KEY,
+    id_producto INT NOT NULL,
+    id_ingrediente INT NOT NULL,
+    cantidad DECIMAL(10,2) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+    FOREIGN KEY (id_ingrediente) REFERENCES ingredientes(id_ingrediente)
+);
+
+-- EXTRAS (ingredientes opcionales para productos)
+CREATE TABLE extras (
+    id_extra INT AUTO_INCREMENT PRIMARY KEY,
+    id_producto INT NOT NULL,
+    id_ingrediente INT NOT NULL,
+    cantidad_extra DECIMAL(10,2) NOT NULL,
+    precio_extra DECIMAL(10,2) DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+    FOREIGN KEY (id_ingrediente) REFERENCES ingredientes(id_ingrediente)
+);
+
+-- MERMAS
+CREATE TABLE mermas (
+    id_merma INT AUTO_INCREMENT PRIMARY KEY,
+    id_producto INT NOT NULL,
+    cantidad DECIMAL(10,2) NOT NULL,
+    motivo VARCHAR(255),
+    id_usuario INT,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+-- DOTACIONES
+CREATE TABLE dotaciones (
+    id_dotacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_producto INT NOT NULL,
+    cantidad DECIMAL(10,2) NOT NULL,
+    id_usuario INT,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+-- EMPAQUETADO (productos que son paquetes de otros productos)
+CREATE TABLE productos_paquete (
+    id_paquete INT AUTO_INCREMENT PRIMARY KEY,
+    id_producto_paquete INT NOT NULL, -- el producto "paquete"
+    id_producto_contenido INT NOT NULL, -- el producto contenido
+    cantidad DECIMAL(10,2) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_producto_paquete) REFERENCES productos(id_producto),
+    FOREIGN KEY (id_producto_contenido) REFERENCES productos(id_producto)
+);
+
+-- PERSONALIZACIONES (ej: doble carne, doble queso, etc.)
+CREATE TABLE personalizaciones (
+    id_personalizacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_venta_detalle INT NOT NULL,
+    tipo VARCHAR(50) NOT NULL, -- ej: 'doble_carne', 'doble_queso', 'sin_cebolla'
+    cantidad DECIMAL(10,2) DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_venta_detalle) REFERENCES venta_detalle(id_detalle)
+);
 CREATE INDEX idx_ventas_fecha ON ventas(fecha);
 CREATE INDEX idx_ventas_usuario ON ventas(id_usuario);
 CREATE INDEX idx_ventas_cliente ON ventas(id_cliente);
