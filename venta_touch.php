@@ -111,7 +111,7 @@ function cobrarMesa(id_venta,mesa){
 			    	$consumo_total+=$dat['cantidad']*$dat['precio_venta'];
 			    }
 			?>
-			<div class="col-md-2 mesa <? if($_GET['id_venta']==$id_venta){?>animated pulse<? } ?>" onclick="verMesa(<?=$id_venta?>,'<?=$mesa?>')">
+			<div class="col-md-2 mesa <? if(isset($_GET['id_venta']) && $_GET['id_venta']==$id_venta){?>animated pulse<? } ?>" onclick="verMesa(<?=$id_venta?>,'<?=$mesa?>')">
 				<h3><? if(is_numeric($mesa)){ echo 'MESA '.$mesa; }else{ echo $mesa; }?><br>
 					<small>$ <?=number_format($consumo_total,2)?></small>
 				</h3>

@@ -115,6 +115,9 @@ unset($_POST['abono']);
 foreach($_POST as $p => $v){
 
 
+	// Inicializar variables para evitar warnings
+	$nombre = '';
+	$categorias = '';
     if(!is_array($v)) continue;
 	foreach($v as $input_name => $cantidad){
 
@@ -122,7 +125,7 @@ foreach($_POST as $p => $v){
 
 if(count($item) < 3) continue;
 		$id_temporal=$item[0];
-		$comentario = $adicional[$id_temporal] ?? '';
+		$comentario = isset($adicional[$id_temporal]) ? $adicional[$id_temporal] : '';
 		
 		$id_producto = $item[1];
 		$precio = $item[2];
@@ -137,16 +140,16 @@ if(count($item) < 3) continue;
 		$query_pro = mysql_query($sql_pro);
 
 	
-      while($ft=mysql_fetch_assoc($query_pro)){
-		$pack = $ft['paquete'];
-		$nombre = $ft['nombre'];
-		$categorias = $ft['categorias'];
-		
-		}
 
-            if($precio==0){
-				unset($nombre);
-				unset($categorias);
+			while($ft=mysql_fetch_assoc($query_pro)){
+				$pack = $ft['paquete'];
+				$nombre = $ft['nombre'];
+				$categorias = $ft['categorias'];
+			}
+
+			if($precio==0){
+				$nombre = '';
+				$categorias = '';
 			}
 		   
 			$sql2="INSERT INTO venta_detalle(id_venta,id_producto,cantidad,precio_venta,comentarios,nombre,categoria)VALUES('$id_venta2','$id_producto','$cantidad','$precio','$comentario','$nombre','$categorias')";
