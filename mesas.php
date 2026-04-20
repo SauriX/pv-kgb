@@ -156,7 +156,7 @@ function cerrar_mesa(mesa,id_venta,bebidas){
 				var datas = data.split('|');
 				console.log(datas);
 				if(datas[0]==1){
-					$.post( "http://localhost:8080/imprimir.php",{data:datas[1]});
+					$.post( "http://localhost/imprimir.php",{data:datas[1]});
 					$('#content_verMesas').load('mesas.php');
 				}else{
 					alert(data);

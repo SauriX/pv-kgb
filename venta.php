@@ -254,6 +254,9 @@ if(!$corte_permiso){
 			$('#mensaje_loader_corte').html('Realizando Corte de Caja..');
 			console.log('hola');
 			$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:otrosMet } ,function(data) {
+				if(data!='NOSESSION' && data!='NOPERMISSION' && data!='ROLLBACK' && data!='MESASPENDIENTES' && data!='1' && data!='0'){
+					$.post("http://localhost/imprimir.php",{data:data});
+				}
 				console.log(data);
 				if(data==1){
 					

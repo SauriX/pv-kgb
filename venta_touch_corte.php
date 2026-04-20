@@ -91,6 +91,9 @@ $(function(){
 			$('#imagen_loader_corte').attr('src','img/load-verde.gif').show();
 			$('#mensaje_loader_corte').html('Realizando Corte de Caja..');
 			$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data) {
+				if(data!='NOSESSION' && data!='NOPERMISSION' && data!='ROLLBACK' && data!='MESASPENDIENTES' && data!='1' && data!='0'){
+					$.post("http://localhost/imprimir.php",{data:data});
+				}
 				if(data==1){
 					$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
 					$('#mensaje_loader_corte').html('Listo.<br/><br/><button onclick="location.reload();" type="button" class="btn btn-default btn_ac btn-md">Terminar</button>');
