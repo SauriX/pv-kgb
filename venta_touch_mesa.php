@@ -190,9 +190,10 @@ function cerrarMesa(id_venta,mesa){
 	   descuento = $('#consumo_total_mesa').text();
    }*/
 	$.post('ac/cerrar_mesa.php','mesa='+mesa+'&id_venta='+id_venta+'&id_descuento='+id_descuento+'&monto_descuento='+monto_descuento,function(data) {
+		var datas = data.split('|');
 		if(datas[0]==1){
 				$.post( "http://localhost/imprimir.php",{data:datas[1]});
-			cobradoExito();
+			location.reload();
 			}else{
 				
 				if(!isNaN(datas[0])){
@@ -200,9 +201,8 @@ function cerrarMesa(id_venta,mesa){
 					pagar(datas[0]);
 				}else{
 					alert(data);
-					cobradoExito();
-				}
-			} 
+					location.reload();
+				} 
 	});
 }
 
@@ -252,9 +252,10 @@ function eliminar_detalle(id){
 	function imprimir(id){
 
 		$.post('includes/reimprimir_comanda.php','id_venta=<?=$id_venta?>',function(data) {
+			var datas = data.split('|');
 			if(datas[0]==1){
 				$.post( "http://localhost/imprimir.php",{data:datas[1]});
-			cobradoExito();
+			location.reload();
 			}else{
 				
 				if(!isNaN(datas[0])){
@@ -262,12 +263,9 @@ function eliminar_detalle(id){
 					pagar(datas[0]);
 				}else{
 					alert(data);
-					cobradoExito();
-				}
-			} 
-
-
-		});
+					location.reload();
+				} 
+	});
 
 	}
 </script>

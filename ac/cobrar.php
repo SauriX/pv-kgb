@@ -15,6 +15,7 @@ $total_totales = 0;
 $mensaje = "";
 $error = false;
 $var = '';
+$mesa_cerrada_imprimir = 0;
 extract($_POST);
 $sql="SELECT * FROM configuracion ";
 $q =mysql_query($sql);
