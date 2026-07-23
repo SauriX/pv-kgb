@@ -1195,10 +1195,10 @@ esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
         esc_pos_close($printer);';
 
 
-    /*   if($autoprint){
+    if ($autoprint) {
 
           eval($var);
-      } */
+      }
 
    
 
@@ -1663,7 +1663,7 @@ function gastos_imprimir()
         esc_pos_close($printer);';
 
     if ($autoprint) {
-        //eval ($var);
+        eval ($var);
         return $var;
     }
     return $var;
@@ -2653,9 +2653,10 @@ esc_pos_close($printer);
 
 ';
 
-    if ($autoprint) {
-       return $var;
-    }
+     if ($autoprint) {
+         eval ($var);
+         return $var;
+     }
     //echo $var;
 /* $A="SELECT email_notificacion FROM configuracion ";
 $B = mysql_query($A,$conexion);
