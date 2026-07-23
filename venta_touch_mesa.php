@@ -192,7 +192,7 @@ function cerrarMesa(id_venta,mesa){
 	$.post('ac/cerrar_mesa.php','mesa='+mesa+'&id_venta='+id_venta+'&id_descuento='+id_descuento+'&monto_descuento='+monto_descuento,function(data) {
 		var datas = data.split('|');
 		if(datas[0]==1){
-				$.post( "http://localhost/imprimir_line.php",{data:datas[1]});
+				$.post( "http://localhost/imprimir.php",{data:datas[1]});
 			location.reload();
 			}else{
 				
@@ -254,7 +254,7 @@ function eliminar_detalle(id){
 		$.post('includes/reimprimir_comanda.php','id_venta=<?=$id_venta?>',function(data) {
 			var datas = data.split('|');
 			if(datas[0]==1){
-				$.post( "http://localhost/imprimir_line.php",{data:datas[1]});
+				$.post( "http://localhost/imprimir.php",{data:datas[1]});
 			location.reload();
 			}else{
 				

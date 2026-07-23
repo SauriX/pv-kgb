@@ -8,26 +8,26 @@ include('../includes/impresora.php');
 include('../includes/postmark.php');
 
 extract($_POST);
-$reimprime = $reimprime ?? 0;
-$id_metodo_pago = $id_metodo_pago ?? 99;
+$reimprime = isset($reimprime) ? $reimprime : 0;
+$id_metodo_pago = isset($id_metodo_pago) ? $id_metodo_pago : 99;
 
-$monto_efectivo = $monto_efectivo ?? 0;
-$monto_tarjeta = $monto_tarjeta ?? 0;
-$monto_transferencia = $monto_transferencia ?? 0;
+$monto_efectivo = isset($monto_efectivo) ? $monto_efectivo : 0;
+$monto_tarjeta = isset($monto_tarjeta) ? $monto_tarjeta : 0;
+$monto_transferencia = isset($monto_transferencia) ? $monto_transferencia : 0;
 
-$consumo_txt = $consumo_txt ?? 0;
-$req_factura = $req_factura ?? 0;
-$num_cta_txt = $num_cta_txt ?? '';
-$iva_efect = $iva_efect ?? 0;
-$codigo = $codigo ?? '';
-$recibe_txt = $recibe_txt ?? 0;
-$cambio_txt = $cambio_txt ?? 0;
-$descuento_txt = $descuento_txt ?? 0;
-$DescEfec_txt = $DescEfec_txt ?? 0;
-$pagarOriginal = $pagarOriginal ?? 0;
-$tc = $tc ?? 0;
-$id_venta_cobrar = $id_venta_cobrar ?? 0;
-$check_imprimir = $check_imprimir ?? 'false';
+$consumo_txt = isset($consumo_txt) ? $consumo_txt : 0;
+$req_factura = isset($req_factura) ? $req_factura : 0;
+$num_cta_txt = isset($num_cta_txt) ? $num_cta_txt : '';
+$iva_efect = isset($iva_efect) ? $iva_efect : 0;
+$codigo = isset($codigo) ? $codigo : '';
+$recibe_txt = isset($recibe_txt) ? $recibe_txt : 0;
+$cambio_txt = isset($cambio_txt) ? $cambio_txt : 0;
+$descuento_txt = isset($descuento_txt) ? $descuento_txt : 0;
+$DescEfec_txt = isset($DescEfec_txt) ? $DescEfec_txt : 0;
+$pagarOriginal = isset($pagarOriginal) ? $pagarOriginal : 0;
+$tc = isset($tc) ? $tc : 0;
+$id_venta_cobrar = isset($id_venta_cobrar) ? $id_venta_cobrar : 0;
+$check_imprimir = isset($check_imprimir) ? $check_imprimir : 'false';
 // 🔥 NORMALIZAR MONTOS
 $monto_efectivo = floatval($monto_efectivo);
 $monto_tarjeta = floatval($monto_tarjeta);

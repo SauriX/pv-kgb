@@ -89,7 +89,7 @@ $precorteTexto = '';
 
         while ($ft = mysql_fetch_assoc($q)) {
 
-           $prod[$ft['id_producto']] = ($prod[$ft['id_producto']] ?? 0) + $ft['cantidad'];
+           $prod[$ft['id_producto']] = (isset($prod[$ft['id_producto']]) ? $prod[$ft['id_producto']] : 0) + $ft['cantidad'];
             if ($ft['extra'] == 1) {
                 $nombres[$ft['id_producto']] = "(EXTRA)" . $ft['nombre'];
 
@@ -359,10 +359,10 @@ while ($ft = mysql_fetch_assoc($q)) {
         $mesas_monto += $ft['monto_pagado'];
     } else {
         $barra_ct++;
-        $barra_monto = ($barra_monto ?? 0) + $ft['monto_pagado'];
+        $barra_monto = (isset($barra_monto) ? $barra_monto : 0) + $ft['monto_pagado'];
     }
 
-    $total_totales = ($total_totales ?? 0) + $ft['monto_pagado'];
+    $total_totales = (isset($total_totales) ? $total_totales : 0) + $ft['monto_pagado'];
 
     if ($ft['facturado']) {
         $pre_fact_ct++;
@@ -496,11 +496,11 @@ while ($ft = mysql_fetch_assoc($q)) {
             }
         }
 
-   $cantidad = $prod[$id] ?? 0;
-$precio = $pu[$id] ?? 0;
+    $cantidad = isset($prod[$id]) ? $prod[$id] : 0;
+    $precio = isset($pu[$id]) ? $pu[$id] : 0;
         $total = $prod[$id] * $pu[$id];
-        $g_total = ($g_total ?? 0) + $total;
-        $total = number_format($total??0, 2, '.', '');
+        $g_total = (isset($g_total) ? $g_total : 0) + $total;
+        $total = number_format(isset($total) ? $total : 0, 2, '.', '');
 
         $prec = strlen($precio);
         $cant = strlen($cantidad);
@@ -584,7 +584,7 @@ $precio = $pu[$id] ?? 0;
     }
 
 
-$efectivo = number_format($efectivo ?? 0, 2, '.', '');
+$efectivo = number_format(isset($efectivo) ? $efectivo : 0, 2, '.', '');
 $tarjetas = number_format($tarjetas, 2, '.', '');
 $transferencia = number_format($transferencia, 2, '.', '');
     $descuentoTotal = $g_total - $totalDescuento;
@@ -732,7 +732,7 @@ esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
             }
         }
 
-       $g_total_g = ($g_total_g ?? 0) + $monto;
+       $g_total_g = (isset($g_total_g) ? $g_total_g : 0) + $monto;
 
         $monto = number_format($monto, 2, '.', '');
         $mont = strlen($monto);

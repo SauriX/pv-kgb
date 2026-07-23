@@ -64,7 +64,7 @@ if(!function_exists('mysql_result')){
     function mysql_result($result, $row = 0, $field = 0){
         if(!$result) return null;
         $data = mysqli_fetch_array($result);
-        return $data[$field] ?? null;
+        return isset($data[$field]) ? $data[$field] : null;
     }
 }
 ?>

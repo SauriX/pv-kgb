@@ -119,7 +119,7 @@ $pu = [];
 
 		while($ft=mysql_fetch_assoc($q)){
 
-			$prod[$ft['id_producto']] = ($prod[$ft['id_producto']] ?? 0) + $ft['cantidad'];
+			$prod[$ft['id_producto']] = (isset($prod[$ft['id_producto']]) ? $prod[$ft['id_producto']] : 0) + $ft['cantidad'];
 			$nombres[$ft['id_producto']] = $ft['nombre'];
 			$pu[$ft['id_producto']] = $ft['precio_venta'];
 
@@ -145,19 +145,19 @@ $pu = [];
 	$q = mysql_query($sql);
 	while($ft = mysql_fetch_assoc($q)){
 
-		$montos_metodo[$ft['id_metodo']] = ($montos_metodo[$ft['id_metodo']] ?? 0) + $ft['monto_pagado'];
+		$montos_metodo[$ft['id_metodo']] = (isset($montos_metodo[$ft['id_metodo']]) ? $montos_metodo[$ft['id_metodo']] : 0) + $ft['monto_pagado'];
 
 		$cta_expedidas++;
 
 		if($ft['mesa']!='BARRA'){
 			$mesas_ct++;
-			$mesas_monto = ($mesas_monto ?? 0) + $ft['monto_pagado'];
+			$mesas_monto = (isset($mesas_monto) ? $mesas_monto : 0) + $ft['monto_pagado'];
 		}else{
 			$barra_ct++;
 			$barra_monto+=$ft['monto_pagado'];
 		}
 
-		$total_totales = ($total_totales ?? 0) + $ft['monto_pagado'];
+		$total_totales = (isset($total_totales) ? $total_totales : 0) + $ft['monto_pagado'];
 
 		if($ft['reabierta']){
 			$cancelaciones++;
