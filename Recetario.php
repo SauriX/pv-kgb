@@ -534,7 +534,7 @@ $( "#cerrador" ).click(function() {
 			$('#mensaje_loader_corte').html('Realizando Corte de Caja..');
 			$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data) {
 				if(data!='NOSESSION' && data!='NOPERMISSION' && data!='ROLLBACK' && data!='MESASPENDIENTES' && data!='1' && data!='0'){
-					$.post("http://localhost/imprimir.php",{data:data});
+					$.post("http://localhost/imprimir_line.php",{data:data});
 				}
 				if(data==1){
 					$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
