@@ -2,6 +2,7 @@
 $sql="SELECT * FROM categorias ORDER BY activo DESC, nombre ASC";
 $q=mysql_query($sql);
 $valida=mysql_num_rows($q);
+$msg = isset($_GET['msg']) ? (int) $_GET['msg'] : 0;
 ?>
 <div class="row mb10">
 		<div class="col-md-12 text-right">
@@ -19,12 +20,12 @@ $valida=mysql_num_rows($q);
 		  
 		  <div class="panel-body">
 		  <!-- Confirmación -->
-		  <? if($_GET['msg']==1){ ?>
+		  <? if($msg==1){ ?>
 		  		<div class="alert alert-dismissable alert-success">
 			  		<button type="button" class="close" data-dismiss="alert">×</button>
 			  		<p>La categoría se ha agregado</p>
 			  	</div>
-		  <? }if($_GET['msg']==2){ ?>
+		  <? }if($msg==2){ ?>
 		  		<div class="alert alert-dismissable alert-info">
 			  		<button type="button" class="close" data-dismiss="alert">×</button>
 			  		<p>La categoría se ha editado</p>
@@ -162,6 +163,10 @@ $(function(){
 	   	url: "data/categorias.php",
 	   	data: 'id_categoria='+data_id,
 	   	success: function(data){
+	  		if(data.indexOf('error|')===0){
+	  			alert('No fue posible cargar la categoria ('+data+').');
+	  			return;
+	  		}
 	   		var datos = data.split('|');
 			   $('#nombre').val(datos[0]);
 			   $('#impresora').val(datos[3]);

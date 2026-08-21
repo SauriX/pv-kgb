@@ -16,13 +16,19 @@ $mensaje = "";
 $error = false;
 $var = '';
 $mesa_cerrada_imprimir = 0;
+$id_venta = 0;
+$id_venta2 = 0;
 extract($_POST);
+if(!isset($numero_mesa)) $numero_mesa = '';
+if(!isset($domicilio)) $domicilio = 0;
+if(!isset($cobro)) $cobro = 0;
 $sql="SELECT * FROM configuracion ";
 $q =mysql_query($sql);
 $ft=mysql_fetch_assoc($q);
 $sucursal=$ft['sucursal'];
 
 $codigo=generateRandomString(15);
+$fechahora_default = $fecha.' '.$hora;
 
 mysql_query("BEGIN");
 
@@ -44,9 +50,10 @@ if($numero_mesa){
 		if($n){
 
 			$id_venta = @mysql_result($q,0);
+			$id_venta2 = $id_venta;
 			if(!$id_venta){
 				$error = true;
-				$mensaje = "mensaje 1";
+				$mensaje = "No se pudo obtener id_venta";
 			}
          
 			
@@ -54,7 +61,9 @@ if($numero_mesa){
 		}else{
 
 			
-			$sql = "INSERT INTO ventas (id_usuario,fecha,hora,mesa,codigo_activacion,domicilio)VALUES('$id_usuario','$fecha','$hora','$numero_mesa','$codigo','$domicilio')";
+			$sql = "INSERT INTO ventas
+				(id_usuario,fecha,hora,mesa,fechahora_cerrada,fechahora_pagada,id_metodo,facturado,monto_facturado,monto_pagado,codigo,metodo_txt,recibe_txt,cambio_txt,pendiente_facturar,pendiente_monto,descuento_txt,DescEfec_txt,pagarOriginal,codigo_activacion,domicilio)
+				VALUES('$id_usuario','$fecha','$hora','$numero_mesa','$fechahora_default','$fechahora_default','0','0','0.00','0.00','','','0.00','0.00','0','0.00','0','0.00','0.00','$codigo','$domicilio')";
 		
 			
 			$q = mysql_query($sql);
@@ -70,20 +79,27 @@ if($numero_mesa){
 			
 		
 			
-				$sql2 = "INSERT INTO ventas (id_usuario,fecha,hora,mesa,codigo_activacion,id_sucursal,id_venta_sucursal,domicilio)VALUES('$id_usuario','$fecha','$hora','$numero_mesa','$codigo','$sucursal','$id_venta','$domicilio')";
+				$sql2 = "INSERT INTO ventas
+					(id_usuario,fecha,hora,mesa,fechahora_cerrada,fechahora_pagada,id_metodo,facturado,monto_facturado,monto_pagado,codigo,metodo_txt,recibe_txt,cambio_txt,pendiente_facturar,pendiente_monto,descuento_txt,DescEfec_txt,pagarOriginal,codigo_activacion,id_sucursal,id_venta_sucursal,domicilio)
+					VALUES('$id_usuario','$fecha','$hora','$numero_mesa','$fechahora_default','$fechahora_default','0','0','0.00','0.00','','','0.00','0.00','0','0.00','0','0.00','0.00','$codigo','$sucursal','$id_venta','$domicilio')";
 
 			
 			
 
 			}else{
 				$error = true;
-				$mensaje = "mensaje 2";
+				$mensaje = mysql_error();
+				if($mensaje == ""){
+					$mensaje = "No se pudo crear la venta";
+				}
 			}
 
 		}
 }else{
          
-			$sql = "INSERT INTO ventas (id_usuario,fecha,hora,mesa,abierta,fechahora_cerrada,codigo_activacion,domicilio)VALUES('$id_usuario','$fecha','$hora','BARRA',0,'$fecha $hora','$codigo','$domicilio')";
+			$sql = "INSERT INTO ventas
+				(id_usuario,fecha,hora,mesa,abierta,fechahora_cerrada,fechahora_pagada,id_metodo,facturado,monto_facturado,monto_pagado,codigo,metodo_txt,recibe_txt,cambio_txt,pendiente_facturar,pendiente_monto,descuento_txt,DescEfec_txt,pagarOriginal,codigo_activacion,domicilio)
+				VALUES('$id_usuario','$fecha','$hora','BARRA','0','$fechahora_default','$fechahora_default','0','0','0.00','0.00','','','0.00','0.00','0','0.00','0','0.00','0.00','$codigo','$domicilio')";
 	
 			   
 			$q = mysql_query($sql);
@@ -100,7 +116,10 @@ if($numero_mesa){
 
 			}else{
 				$error = true;
-				$mensaje = "mensaje 3";
+				$mensaje = mysql_error();
+				if($mensaje == ""){
+					$mensaje = "No se pudo crear la venta de barra";
+				}
 			}
 
 
@@ -113,6 +132,7 @@ unset($_POST['abono']);
 
 
 
+if(!$error && $id_venta){
 foreach($_POST as $p => $v){
 
 
@@ -131,8 +151,6 @@ if(count($item) < 3) continue;
 		$id_producto = $item[1];
 		$precio = $item[2];
 		if($id_producto==""){ continue; }
-		$sql="INSERT INTO venta_detalle(id_venta,id_producto,cantidad,precio_venta,comentarios)VALUES('$id_venta','$id_producto','$cantidad','$precio','$comentario')";
-		$query = mysql_query($sql);
 		$pack=0; 
 		$sql_pro="SELECT productos.* ,categorias.nombre as categorias FROM productos
 		LEFT JOIN categorias ON productos.id_categoria = categorias.id_categoria
@@ -153,7 +171,8 @@ if(count($item) < 3) continue;
 				$categorias = '';
 			}
 		   
-			$sql2="INSERT INTO venta_detalle(id_venta,id_producto,cantidad,precio_venta,comentarios,nombre,categoria)VALUES('$id_venta2','$id_producto','$cantidad','$precio','$comentario','$nombre','$categorias')";
+			$sql="INSERT INTO venta_detalle(id_venta,id_producto,cantidad,precio_venta,comentarios,nombre,categoria)VALUES('$id_venta','$id_producto','$cantidad','$precio','$comentario','$nombre','$categorias')";
+			$query = mysql_query($sql);
 
          if($pack == 1){
 
@@ -171,13 +190,10 @@ if(count($item) < 3) continue;
 			  $nombre2=$ftx3['nombre'];
 			  $categorias2 = $ftx3['categorias'];
 			$sql69="INSERT INTO venta_detalle
-			(id_venta,id_producto,cantidad,precio_venta,comentarios)VALUES('$id_venta','$id_producto2','$cantidad2','00.00','$comentario')";
+			(id_venta,id_producto,cantidad,precio_venta,comentarios,nombre,categoria)VALUES('$id_venta','$id_producto2','$cantidad2','00.00','$comentario','$nombre2','$categorias2')";
 			$query69 = mysql_query($sql69);
 
 
-			
-			$sql70="INSERT INTO venta_detalle
-			(id_venta,id_producto,cantidad,precio_venta,comentarios,nombre)VALUES('$id_venta2','$id_producto2','$cantidad2','00.00','$comentario','$nombre2','$categorias2')";
 		  }
 
                 
@@ -186,19 +202,26 @@ if(count($item) < 3) continue;
 
 		if(!$query){
 			$error = true;
-			$mensaje = "mensaje 4";
+			$mensaje = mysql_error();
+			if($mensaje == ""){
+				$mensaje = "No se pudo guardar el detalle de venta";
+			}
 		
 			
 		}
+				if(!$id_venta){
+					$error = true;
+					$mensaje = "No se pudo generar id_venta";
+				}
 	
 
 		
-       
 		$total_totales+=$precio*$cantidad;
 
 	}
 	
 
+}
 }
 
 

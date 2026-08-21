@@ -19,12 +19,13 @@ $q_productos=mysql_query($sq_productos);
 
 		  <div class="panel-body">
 		  <!-- Confirmación -->
-		  <? if($_GET['msg']==1){ ?>
+		  <? $msg = isset($_GET['msg']) ? $_GET['msg'] : 0; ?>
+		  <? if($msg==1){ ?>
 		  		<div class="alert alert-dismissable alert-success">
 			  		<button type="button" class="close" data-dismiss="alert">×</button>
 			  		<p>El producto se ha agregado</p>
 			  	</div>
-		  <? }if($_GET['msg']==2){ ?>
+		  <? }if($msg==2){ ?>
 		  		<div class="alert alert-dismissable alert-info">
 			  		<button type="button" class="close" data-dismiss="alert">×</button>
 			  		<p>El producto se ha editado</p>

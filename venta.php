@@ -856,12 +856,12 @@ function abrirCaja(){
 		<div class="row">
 			<div class="col-md-8">
 <?
-if($s_tipo==1){
+	if($s_tipo==1){
 ?>
-				<a href="?Modulo=VentaTouch" class="btn btn-danger mt10">Touch</a>&nbsp;&nbsp;
-
+				<a href="?Modulo=VentaTouch" class="btn btn-danger mt10">Módulo de Mesas</a>&nbsp;&nbsp;
 <?
-}
+	}
+
 	$sq_abrir="SELECT abrir_caja from configuracion";
 	$q_abrir=mysql_query($sq_abrir);
 	$row_abrir = mysql_fetch_array($q_abrir);
@@ -1026,7 +1026,7 @@ if($s_tipo==1){
 
 <!-- PAGAR MESA-->
 <div class="modal fade" id="pagarMesa">
-	<div class="modal-dialog" style="margin-top: 60px;">
+	<div class="modal-dialog" style="margin: 20px auto; width: 95%; max-width: 980px;">
 		<div class="modal-content">
 
 	<div class="modal-header">
@@ -1035,7 +1035,7 @@ if($s_tipo==1){
 	</div>
 
 
-			<div class="modal-body">
+			<div class="modal-body" style="max-height: calc(100vh - 180px); overflow-y: auto; overflow-x: hidden;">
 			<form id="cobrar_pagar">
 	      		<div class="row">
 		  			<div class="col-md-6" style="margin-top: 24px">

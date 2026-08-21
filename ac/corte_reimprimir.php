@@ -5,7 +5,10 @@
 	include('../includes/impresora.php');
 
 	
-	extract($_POST);
+	$id_corte = isset($_POST['id_corte']) ? intval($_POST['id_corte']) : 0;
+	if(!$id_corte){
+		exit('Falta id_corte');
+	}
 	
 	$sql ="SELECT*FROM cortes WHERE id_corte = $id_corte";
 
@@ -41,9 +44,16 @@
 
 		while($ft=mysql_fetch_assoc($q)){
 
-			$prod[$ft['id_producto']]+=$ft['cantidad'];
-			$nombres[$ft['id_producto']] = $ft['nombre'];
-			$pu[$ft['id_producto']] = $ft['precio_venta'];
+			$id_producto = isset($ft['id_producto']) ? $ft['id_producto'] : 0;
+			if(!$id_producto){
+				continue;
+			}
+
+			$cantidad = isset($ft['cantidad']) ? floatval($ft['cantidad']) : 0;
+			$prod[$id_producto] = isset($prod[$id_producto]) ? $prod[$id_producto] : 0;
+			$prod[$id_producto] += $cantidad;
+			$nombres[$id_producto] = isset($ft['nombre']) ? $ft['nombre'] : '';
+			$pu[$id_producto] = isset($ft['precio_venta']) ? floatval($ft['precio_venta']) : 0;
 
 		}
 
@@ -54,9 +64,15 @@
 	$barra_ct = 0;
 	$pre_fact_ct = 0;
 	$no_fact_ct = 0;
+	$mesas_monto = 0;
+	$barra_monto = 0;
+	$pre_fact_monto = 0;
+	$no_fact_monto = 0;
+	$total_totales = 0;
 
 	$cancelaciones = 0;
 	$cta_expedidas = 0;
+	$montos_metodo = array();
 
 	$sqlMetodos = "SELECT id_metodo,metodo_pago FROM metodo_pago";
 	$qMetodos = mysql_query($sqlMetodos);
@@ -67,26 +83,28 @@
 	$q = mysql_query($sql);
 	while($ft = mysql_fetch_assoc($q)){
 
-		$montos_metodo[$ft['id_metodo']]+=$ft['monto_pagado'];
+		$id_metodo = isset($ft['id_metodo']) ? $ft['id_metodo'] : 0;
+		$montos_metodo[$id_metodo] = isset($montos_metodo[$id_metodo]) ? $montos_metodo[$id_metodo] : 0;
+		$montos_metodo[$id_metodo] += floatval($ft['monto_pagado']);
 
 		$cta_expedidas++;
 
 		if($ft['mesa']!='BARRA'){
 			$mesas_ct++;
-			$mesas_monto+=$ft['monto_pagado'];
+			$mesas_monto += floatval($ft['monto_pagado']);
 		}else{
 			$barra_ct++;
-			$barra_monto+=$ft['monto_pagado'];
+			$barra_monto += floatval($ft['monto_pagado']);
 		}
 
-		$total_totales+=$ft['monto_pagado'];
+		$total_totales += floatval($ft['monto_pagado']);
 
 		if($ft['facturado']){
 			$pre_fact_ct++;
-			$pre_fact_monto+=$ft['monto_facturado'];
+			$pre_fact_monto += floatval($ft['monto_facturado']);
 		}else{
 			$no_fact_ct++;
-			$no_fact_monto+=$ft['monto_pagado'];
+			$no_fact_monto += floatval($ft['monto_pagado']);
 		}
 
 		if($ft['reabierta']){
@@ -95,19 +113,35 @@
 
 	}
 
-		$promedio = @($total_totales/$cta_expedidas);
-		$mesas_por = @($mesas_ct/$cta_expedidas)*100;
-		$barra_por = @($barra_ct/$cta_expedidas)*100;
-		$pre_fact_por = @($pre_fact_ct/$cta_expedidas)*100;
-		$no_fact_por = @($no_fact_ct/$cta_expedidas)*100;
+		if($cta_expedidas > 0){
+			$promedio = $total_totales / $cta_expedidas;
+			$mesas_por = ($mesas_ct / $cta_expedidas) * 100;
+			$barra_por = ($barra_ct / $cta_expedidas) * 100;
+			$pre_fact_por = ($pre_fact_ct / $cta_expedidas) * 100;
+			$no_fact_por = ($no_fact_ct / $cta_expedidas) * 100;
+		}else{
+			$promedio = 0;
+			$mesas_por = 0;
+			$barra_por = 0;
+			$pre_fact_por = 0;
+			$no_fact_por = 0;
+		}
 
-		$pre_fact_monto_por = @($pre_fact_monto/$total_totales)*100;
-		$no_fact_monto_por = @($no_fact_monto/$total_totales)*100;
-
-		$mesas_monto_por = @($mesas_monto/$total_totales)*100;
-		$barra_monto_por = @($barra_monto/$total_totales)*100;
-		$var.=imprimir_corte($id_corte,1);
-			echo $var;
+		if($total_totales > 0){
+			$pre_fact_monto_por = ($pre_fact_monto / $total_totales) * 100;
+			$no_fact_monto_por = ($no_fact_monto / $total_totales) * 100;
+			$mesas_monto_por = ($mesas_monto / $total_totales) * 100;
+			$barra_monto_por = ($barra_monto / $total_totales) * 100;
+		}else{
+			$pre_fact_monto_por = 0;
+			$no_fact_monto_por = 0;
+			$mesas_monto_por = 0;
+			$barra_monto_por = 0;
+		}
+		global $autoprint;
+		$autoprint = true;
+		imprimir_corte($id_corte,1);
+		echo '1';
 
 
 

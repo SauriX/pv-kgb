@@ -109,6 +109,11 @@ function horaSinFecha($fecha){
 function fechaLetra($fecha){
 
 	list($anio,$mes,$dia)=explode("-",$fecha);
+	$mes = (int)$mes;
+	if($mes < 1 || $mes > 12){
+		return "";
+	}
+	$mest = "";
 	switch($mes){
 	case 1:
 	$mest="Ene";
@@ -155,6 +160,11 @@ function fechaLetra($fecha){
 function fechaLetraDos($fecha){
 
 	list($anio,$mes,$dia)=explode("-",$fecha);
+	$mes = (int)$mes;
+	if($mes < 1 || $mes > 12){
+		return "";
+	}
+	$mest = "";
 	switch($mes){
 	case 1:
 	$mest="Ene";
@@ -201,6 +211,11 @@ function fechaLetraDos($fecha){
 function fechaLetraTres($fecha){
 
 	list($anio,$mes,$dia)=explode("-",$fecha);
+	$mes = (int)$mes;
+	if($mes < 1 || $mes > 12){
+		return "";
+	}
+	$mest = "";
 	switch($mes){
 	case 1:
 	$mest="Enero";

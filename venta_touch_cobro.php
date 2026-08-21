@@ -12,6 +12,7 @@ $dats = mysql_fetch_assoc($q);
 $pagada = $dats['pagada'];
 $facturado = $dats['facturado'];
 $id_descuento = $dats['descuento_txt'];
+$facturale = 0;
 
 if(($pagada==1)&&($facturado==1)) exit('Pagado y facturado already.');
 
@@ -120,7 +121,7 @@ function actualizaDescuento(){
 		$('#DescEfec_txt').val('0.00');
 
 		var totalPag = $('#total_txt').val();
-		var recibe = $('#recibe_txt').val();
+		var recibe = getRecibeActual();
 		if (recibe != '') {
 			cambio = recibe-totalPag;
 			$('#cambio_txt').val(Number(cambio).toFixed(2));
@@ -130,7 +131,7 @@ function actualizaDescuento(){
 		$('#DescEfec_txt').val(Number(descuento).toFixed(2));
 		totalPag = pagarOriginal-descuento;
 		$('#total_txt').val(Number(totalPag).toFixed(2));
-		var recibe = $('#recibe_txt').val();
+		var recibe = getRecibeActual();
 		if (recibe != '') {
 			cambio = recibe-totalPag;
 			$('#cambio_txt').val(Number(cambio).toFixed(2));
@@ -178,9 +179,7 @@ function actualizaDescuento(){
 	                		<input type="hidden" name="id_venta" value="<?=$id_venta?>" />
 							<?
 		                	}
-		                	if(!$facturale){
-
-		                	?>
+	                		?>
 
 							<div class="form-group form-group-lg">
 								<label for="inputEmail3" class="col-sm-4 control-label">CLIENTE</label>
@@ -206,10 +205,26 @@ function actualizaDescuento(){
 								</div>
 							</div>
 
+							<input type="hidden" id="recibe_txt" name="recibe_txt" value="0">
+
 							<div class="form-group form-group-lg">
-								<label for="inputEmail3" class="col-sm-4 control-label">RECIBE</label>
+								<label for="inputEmail3" class="col-sm-4 control-label">EFECTIVO</label>
 								<div class="col-sm-8">
-									<input type="text" class="form-control total solo_numero no-select" id="recibe_txt" name="recibe_txt" autocomplete="off">
+									<input type="number" class="form-control total" id="monto_efectivo" name="monto_efectivo" value="0">
+								</div>
+							</div>
+
+							<div class="form-group form-group-lg">
+								<label for="inputEmail3" class="col-sm-4 control-label">TARJETA</label>
+								<div class="col-sm-8">
+									<input type="number" class="form-control total" name="monto_tarjeta" value="0">
+								</div>
+							</div>
+
+							<div class="form-group form-group-lg">
+								<label for="inputEmail3" class="col-sm-4 control-label">TRANSFERENCIA</label>
+								<div class="col-sm-8">
+									<input type="number" class="form-control total" name="monto_transferencia" value="0">
 								</div>
 							</div>
 
@@ -263,74 +278,36 @@ function actualizaDescuento(){
 									<input type="number" class="form-control total" name="cambio_txt" id="cambio_txt" readonly="1" value="" style="color:red">
 								</div>
 							</div>
-							<?
-							}
-							?>
+
+							<input type="hidden" name="id_metodo_pago" id="id_metodo_pago" value="99">
 
 							<div class="form-group form-group-lg">
-								<div class="col-md-12 control-label" style="text-align: left;">MÉTODO DE PAGO</div>
+								<div class="col-md-12 control-label" style="text-align: left;">FACTURA</div>
 								<div class="col-md-12">
-
-									<div class="row" style="margin-top: 20px;">
-										<div class="col-md-12" style="text-align: center;">
-											<div class="btn-group" data-toggle="radio" id="optMetodoPago">
-
-											<?
-								$sql = "SELECT*FROM metodo_pago";
-								$q = mysql_query($sql);
-								while($ft = mysql_fetch_assoc($q)){
-?>
-				  					<!--<option value=""></option>-->
-									  <label class="btn btn-default metodo_reset">
-													<input type="radio" class="metodo_pago" name="id_metodo_pago" value="<?=$ft['id_metodo']?>" autocomplete="off"> <?=$ft['metodo_pago']?>
-												</label>
-<?
-								}
-?>
-
-
-<!--
-												<label class="btn btn-default metodo_reset">
-													<input type="radio" class="metodo_pago" name="id_metodo_pago" value="2" autocomplete="off"> TARJETA
-												</label>
-												<label class="btn btn-default metodo_reset">
-													<input type="radio" class="metodo_pago" name="id_metodo_pago" value="3" autocomplete="off"> TRANSFERENCIA
-												</label>
-												<label class="btn btn-default metodo_reset">
-													<input type="radio" class="metodo_pago" name="id_metodo_pago" value="4" autocomplete="off"> CHEQUE
-												</label>
-												-->
-											</div>
-
-										</div>
-									</div>
+									<select class="form-control input-lg" id="req_factura" name="req_factura">
+										<option value="1">No</option>
+										<option value="2">Si</option>
+									</select>
 								</div>
 							</div>
 
-	                		<div class="form-group form-group-lg hide">
-								<div class="col-md-6 control-label" style="text-align: left;">¿REQUIERE FACTURA?</div>
-								<div class="col-md-6" style="padding-top: 5px;">
-									<div class="btn-group" data-toggle="buttons">
-										<label class="btn btn-default" id="si_requiere" onclick="requiere()">
-											<input type="radio" name="req_factura" value="2" id="radio_si_requiere" autocomplete="off" checked> &nbsp;&nbsp;&nbsp;&nbsp;SI&nbsp;&nbsp;&nbsp;&nbsp;
-										</label>
-										<label class="btn btn-default" id="no_requiere" onclick="no_requiere();">
-											<input type="radio" name="req_factura" value="1" id="radio_no_requiere" autocomplete="off"> &nbsp;&nbsp;&nbsp;&nbsp;NO&nbsp;&nbsp;&nbsp;&nbsp;
-										</label>
-									</div>
+							<div class="form-group form-group-lg" id="monto_factura_div" style="display:none">
+								<label class="col-sm-4 control-label">MONTO A FACTURAR</label>
+								<div class="col-sm-8">
+									<input type="text" class="form-control input-lg solo_numero" name="monto_facturado" id="monto_facturado" value="0">
 								</div>
 							</div>
 
-							<div class="form-group form-group-lg 4digitos" style="display:none">
-								<label for="inputEmail3" class="col-sm-6 control-label">ÚLTIMOS 4 DIGITOS</label>
-								<div class="col-sm-6">
-									<input type="text" class="form-control total solo_numero" name="num_cta_txt" id="4digitos_txt" maxlength="4" >
+							<div class="form-group form-group-lg" id="div_numero_cuenta" style="display:none">
+								<label class="col-sm-4 control-label">NÚMERO DE CUENTA</label>
+								<div class="col-sm-8">
+									<input type="text" class="form-control input-lg solo_numero" id="numero_cuenta" maxlength="4" name="num_cta_txt" placeholder="Últimos 4 dígitos">
 								</div>
 							</div>
 
-                		</form>
-                	</div>
-            	</div>
+	                	</form>
+	                	</div>
+	            	</div>
 
 
 			</div>
@@ -420,7 +397,7 @@ function actualizaDescuento(){
 
 			  </div>
 
-		      <input type="checkbox" id="check_imprimir" name="check_imprimir" > <a style="text-decoration: none;color:black; font-size:18px">Omitir Impresión<a>
+						<input type="checkbox" id="check_imprimir" name="check_imprimir" > <a style="text-decoration: none;color:black; font-size:18px">Omitir Impresión<a>
 
 			</div>
 
@@ -428,7 +405,7 @@ function actualizaDescuento(){
 			</div>
 		</div>
 	</div>
-<input type="hidden" id="enfoque" value="#recibe_txt" />
+<input type="hidden" id="enfoque" value="#monto_efectivo" />
 
 </div>
 <script>
@@ -439,6 +416,17 @@ function no_requiere(){
 
 reset();
 
+}
+
+function getRecibeActual(){
+	var recibe = $('#monto_efectivo').val();
+	if(recibe===''){
+		recibe = '';
+	}else{
+		recibe = Number(recibe);
+	}
+	$('#recibe_txt').val(recibe);
+	return recibe;
 }
 <? if($id_descuento){ ?>
 	actualizaDescuento();
@@ -464,8 +452,10 @@ function cobrar(){
 			$('#cobrar_final').html('Cobrando...');
 			$.post('ac/cobrar_pagar.php',datos,function(data) {
 				console.log(datos);
+				data = $.trim(data);
+				var datas = data.split('|');
 
-				if(data==1){
+				if(datas[0]==1){
 					window.location  = 'index.php?Modulo=VentaTouch';
 				}else{
 					console.log(data);
@@ -542,7 +532,7 @@ function calculadora(data){
 
 function calculadora_billete(data_billete){
 	var billete_d = $('#enfoque').val();
-	var recibe = $('#recibe_txt').val();
+	var recibe = $(billete_d).val();
 
 
 	if(recibe == ""){
@@ -550,11 +540,13 @@ function calculadora_billete(data_billete){
 
 		suma = parseFloat(recibe) + parseFloat(data_billete);
 		$(billete_d).val(suma);
+		getRecibeActual();
 		calcular_cambio();
 	}
 	else{
 		suma = parseFloat(recibe) + parseFloat(data_billete);
 		$(billete_d).val(suma);
+		getRecibeActual();
 		calcular_cambio();
 	}
 
@@ -571,7 +563,7 @@ function inpuesto(){
 	var consumo_total= Number(totalPag) + inpuesto;
 	$('#iva_efect').val(Number(inpuesto).toFixed(2));
 	$('#total_txt').val(Number(consumo_total).toFixed(2));
-	var recibe = $('#recibe_txt').val();
+	var recibe = getRecibeActual();
 	if (recibe != '') {
 		cambio = recibe-consumo_total;
 		$('#cambio_txt').val(Number(cambio).toFixed(2));
@@ -580,18 +572,21 @@ function inpuesto(){
 
 function calcular_cambio(){
 
-		var recibe = $('#recibe_txt').val();
+		var efectivo = Number(getRecibeActual()) || 0;
+		var total = Number($('#total_txt').val()) || 0;
+		var tarjeta = Number($('[name="monto_tarjeta"]').val()) || 0;
+		var transferencia = Number($('[name="monto_transferencia"]').val()) || 0;
 
-		var total = $('#total_txt').val();
-		var cambio = Number(recibe)-Number(total);
+		var requerido_efectivo = total - (tarjeta + transferencia);
+		if(requerido_efectivo < 0){
+			requerido_efectivo = 0;
+		}
 
-		if(cambio>0){
+		var cambio = efectivo - requerido_efectivo;
+		if(cambio > 0){
 			$('#cambio_txt').val(Number(cambio).toFixed(2));
-		}else if(cambio==0){
-			$('#cambio_txt').val('0.00');
 		}else{
-			$('#cambio_txt').val('');
-			return false;
+			$('#cambio_txt').val('0.00');
 		}
 
 
@@ -600,9 +595,9 @@ function calcular_cambio(){
 $(function(){
 
 
-$('#recibe_txt').focus(function() {
+$('#monto_efectivo').focus(function() {
 
-	$('#enfoque').val('#recibe_txt');
+	$('#enfoque').val('#monto_efectivo');
 
 });
 
@@ -632,28 +627,29 @@ si_requiere" onclick="requiere()">
 });
 
 
-	$('#recibe_txt').keyup(function(e) {
+	$('#monto_efectivo').on('keyup change', function(e) {
 
-		var recibe = $('#recibe_txt').val();
-
-		var total = $('#total_txt').val();
-		var cambio = Number(recibe)-Number(total);
-
-		if(cambio>0){
-			$('#cambio_txt').val(Number(cambio).toFixed(2));
-		}else if(cambio==0){
-			$('#cambio_txt').val('0.00');
-		}else{
-			$('#cambio_txt').val('');
-			return false;
-		}
+		calcular_cambio();
 
 		if(e.keyCode==13){
-
-			open($('#id_metodo_pago'));
-
+			$('#req_factura').focus();
 		}
 
 	});
+
+	$('[name="monto_tarjeta"], [name="monto_transferencia"]').on('keyup change', function() {
+		calcular_cambio();
+	});
+
+		$('#req_factura').change(function() {
+			if($(this).val()=='2'){
+				$('#monto_factura_div').show();
+			}else{
+				$('#monto_factura_div').hide();
+				$('#monto_facturado').val('0');
+			}
+		});
+
+		$('#req_factura').trigger('change');
 });
 </script>

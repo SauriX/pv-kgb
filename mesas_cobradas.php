@@ -3,8 +3,8 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 include("includes/db.php");
-$sql="SELECT * FROM ventas
-JOIN metodo_pago ON ventas.id_metodo = metodo_pago.id_metodo
+$sql="SELECT ventas.*, metodo_pago.metodo_pago AS metodo_catalogo FROM ventas
+LEFT JOIN metodo_pago ON ventas.id_metodo = metodo_pago.id_metodo
 WHERE abierta = 0 AND pagada = 1 AND id_corte = 0 ORDER BY fechahora_pagada DESC";
 $q=mysql_query($sql);
 $valida=mysql_num_rows($q);
@@ -66,8 +66,13 @@ $valida=mysql_num_rows($q);
 
 
 							<td  align="right"><?
-
-								echo $ft['metodo_pago'];
+								if(isset($ft['metodo_catalogo']) && $ft['metodo_catalogo']!=''){
+									echo $ft['metodo_catalogo'];
+								}elseif(isset($ft['metodo_txt']) && $ft['metodo_txt']!=''){
+									echo $ft['metodo_txt'];
+								}else{
+									echo 'MIXTO';
+								}
 
 
 								?></td>

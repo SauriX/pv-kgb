@@ -5,13 +5,17 @@ include("../includes/funciones.php");
 
 extract($_POST);
 
+$nombre = isset($nombre) ? $nombre : '';
+$id_unidad = isset($id_unidad) ? intval($id_unidad) : 0;
+$precio = isset($precio) ? $precio : 0;
+
 //Validamos datos completos
 
 //if(!$email) exit("Debe escribir una direcci&oacute;n de Email.");
 
 if(!$nombre) exit("Debe escribir un nombre para el producto.");
 
-if(!$id_unidad) exit("Debe ingresar una unidad para el producto.");
+if($id_unidad<=0) exit("Debe ingresar una unidad para el producto.");
 
 
 //if(!$precio) exit("Debe escribir un precio para el producto.");
@@ -31,8 +35,11 @@ $precio=limpiaStr($precio,1,1);
 
 
 //Verificamos que el usuario no exista
-$q=mysql_query("SELECT * FROM productos_base WHERE nombre = '$nombre'");
+$q=mysql_query("SELECT * FROM productos_base WHERE producto = '$nombre'");
+$valida = 0;
+if($q){
 $valida=mysql_num_rows($q);
+}
 if($valida>0){
 	exit(" nombre del producto se encuentra en uso.");
 }else{

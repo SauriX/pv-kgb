@@ -64,8 +64,8 @@ $salto = chr(13) . chr(10);
     $pu = array();
 
 // 🔥 FIX PHP 8
-$montos_metodo = [];
-$me = [];
+$montos_metodo = array();
+$me = array();
 
 $mesas_monto = 0;
 $barra_monto = 0;
@@ -259,10 +259,6 @@ $precorteTexto = '';
                 $sql_producto = "SELECT  * FROM  productosxbase WHERE  id_producto=$id_base";
                 $producto_q = mysql_query($sql_producto);
 
-                echo ("</br>");
-                echo "ignorado" . $ignorar;
-                echo "id" . $id_base;
-
                 while ($ft4 = mysql_fetch_assoc($producto_q)) {
                     $id_base = $ft4['id_base'];
                     $cantidad2 = $ft4['cantidad'] * $cantidad;
@@ -339,9 +335,14 @@ $precorteTexto = '';
     $cancelaciones = 0;
     $cta_expedidas = 0;
 
- $efectivo = 0;
-$tarjetas = 0;
-$transferencia = 0;
+    $efectivo = 0;
+    $tarjetas = 0;
+    $transferencia = 0;
+    $mesas_monto = 0;
+    $barra_monto = 0;
+    $pre_fact_monto = 0;
+    $no_fact_monto = 0;
+    $total_totales = 0;
 
 $sql = "SELECT * FROM ventas WHERE id_corte = $id_corte";
 $q = mysql_query($sql);
@@ -377,17 +378,31 @@ while ($ft = mysql_fetch_assoc($q)) {
     }
 }
 
-    $promedio = @($total_totales / $cta_expedidas);
-    $mesas_por = @($mesas_ct / $cta_expedidas) * 100;
-    $barra_por = @($barra_ct / $cta_expedidas) * 100;
-    $pre_fact_por = @($pre_fact_ct / $cta_expedidas) * 100;
-    $no_fact_por = @($no_fact_ct / $cta_expedidas) * 100;
+    if ($cta_expedidas > 0) {
+        $promedio = $total_totales / $cta_expedidas;
+        $mesas_por = ($mesas_ct / $cta_expedidas) * 100;
+        $barra_por = ($barra_ct / $cta_expedidas) * 100;
+        $pre_fact_por = ($pre_fact_ct / $cta_expedidas) * 100;
+        $no_fact_por = ($no_fact_ct / $cta_expedidas) * 100;
+    } else {
+        $promedio = 0;
+        $mesas_por = 0;
+        $barra_por = 0;
+        $pre_fact_por = 0;
+        $no_fact_por = 0;
+    }
 
-    $pre_fact_monto_por = @($pre_fact_monto / $total_totales) * 100;
-    $no_fact_monto_por = @($no_fact_monto / $total_totales) * 100;
-
-    $mesas_monto_por = @($mesas_monto / $total_totales) * 100;
-    $barra_monto_por = @($barra_monto / $total_totales) * 100;
+    if ($total_totales > 0) {
+        $pre_fact_monto_por = ($pre_fact_monto / $total_totales) * 100;
+        $no_fact_monto_por = ($no_fact_monto / $total_totales) * 100;
+        $mesas_monto_por = ($mesas_monto / $total_totales) * 100;
+        $barra_monto_por = ($barra_monto / $total_totales) * 100;
+    } else {
+        $pre_fact_monto_por = 0;
+        $no_fact_monto_por = 0;
+        $mesas_monto_por = 0;
+        $barra_monto_por = 0;
+    }
 
     $fecha_hora_ticket = $fecha_corte;
     $fecha_corte = '
@@ -428,6 +443,7 @@ while ($ft = mysql_fetch_assoc($q)) {
         $producto = $nombre;
         $producto = substr($producto, 0, 20);
         $c_p = strlen($producto);
+        $space0 = '';
         if ($c_p < 20) {
             $to_p = 20 - $c_p;
             switch ($to_p) {
@@ -634,6 +650,7 @@ esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
         $monto = $fx['monto'];
         $gasto_ok = substr($gasto, 0, 25);
         $c_p = strlen($gasto_ok);
+        $space0 = '';
         if ($c_p < 30) {
             $to_p = 30 - $c_p;
             switch ($to_p) {
@@ -972,6 +989,11 @@ esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
         $var .= 'esc_pos_line($printer, "PRODUCTO      DOTA    MERM   CONSU  EXIS");';
 
         foreach ($tags as $producto) {
+            $space0 = '';
+            $space1 = '';
+            $space2 = '';
+            $space3 = '';
+            $space4 = '';
             $nombre = trim($producto['producto']);
 
             $dota = $producto['dotado_dia'];
@@ -979,6 +1001,7 @@ esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
             $exis = $producto['cantidad'];
 
             $cant = $producto['consumo_dia'];
+            $cantidad = $cant;
 
             $merm = $producto['mermado_dia'];
             $prev = $producto['previa'];
@@ -1235,8 +1258,7 @@ $impresorapapa;
 function imprimir_comandas($tipo, $id)
 {
 $impresora_nueva = '';
-$var = '';
-   $impresion = [];
+$impresion = array();
     /*
     imprimir_comandas('venta',183270);
     imprimir_comandas('domicilio',11);
@@ -1260,7 +1282,7 @@ $var = '';
 
         //file_put_contents('x.txt',$sql);
 
-    } elseif ('domicilio') {
+    } elseif ($tipo=='domicilio') {
 
         $sql = "SELECT venta_domicilio_detalle.cantidad,productos.nombre,venta_domicilio_detalle.precio_venta,venta_domicilio_detalle.id_producto,venta_domicilio_detalle.comentarios,productos.id_categoria,categorias.impresora,productos.imprimir_solo,ventas_domicilio.fechahora_alta
             FROM venta_domicilio_detalle
@@ -1276,6 +1298,9 @@ $var = '';
     }
 
     $q = mysql_query($sql);
+    if(!$q){
+        return 'error|query';
+    }
 
     $c = 10;
     $c2 = 10;
@@ -1306,7 +1331,7 @@ $var = '';
             if ($tipo == 'venta') {
                 $fechahoy = $ft['fecha'] . ' ' . $ft['hora'];
 
-            } elseif ('domicilio') {
+            } elseif ($tipo=='domicilio') {
                 $fechahoy = $ft['fechahora_alta'];
             }
 
@@ -1374,7 +1399,7 @@ $var = '';
             if ($tipo == 'venta') {
                 $fechahoy = $ft['fecha'] . ' ' . $ft['hora'];
 
-            } elseif ('domicilio') {
+            } elseif ($tipo=='domicilio') {
                 $fechahoy = $ft['fechahora_alta'];
             }
 
@@ -1440,7 +1465,7 @@ $var = '';
             if ($tipo == 'venta') {
                 $fechahoy = $ft['fecha'] . ' ' . $ft['hora'];
 
-            } elseif ('domicilio') {
+            } elseif ($tipo=='domicilio') {
                 $fechahoy = $ft['fechahora_alta'];
             }
 
@@ -1507,7 +1532,7 @@ $var = '';
             if ($tipo == 'venta') {
                 $fechahoy = $ft['fecha'] . ' ' . $ft['hora'];
 
-            } elseif ('domicilio') {
+            } elseif ($tipo=='domicilio') {
                 $fechahoy = $ft['fechahora_alta'];
             }
 
@@ -1559,11 +1584,15 @@ $var = '';
 
     }//termina el whle
 
+    if(empty($impresion)){
+        return 'error|sin_productos';
+    }
+
     foreach ($impresion as $printer => $v) {
 
         if ($tipo == 'venta') {
             $tipo_comanda = "MESA: $mesa";
-        } elseif ('domicilio') {
+        } elseif ($tipo=='domicilio') {
             $tipo_comanda = "*** PARA LLEVAR ***";
         }
 
@@ -1573,28 +1602,31 @@ $var = '';
 
         foreach ($v as $print => $data) {
             $print_original = $print;
-            if ($comandain == "1") {
+            if ($comandain == "1" || trim($print) == "") {
                 $print = $impresora_cuentas;
 
             }
+            if(trim($print) == ""){
+                return 'error|impresora_no_configurada';
+            }
             //DE LA OTRA FORMA SE BAJAN LOS DATOS ACA.
             $fecha_hoy = fechaHoraVista($fechahoy);
-       $var.='$escpos = new KEscPos('.'TM-T88IV AFU'.','.$print.','.'true'.','.'true);
-            $escpos->Font("A");
-            $escpos->Align("center");
-            $escpos->Double(true);
-            $escpos->Width("double");
-            $escpos->Line("");
-            $escpos->Line();
-            $escpos->Line('.$print_original.');
-            $escpos->Line("COMANDA #" '. $id.');
-            $escpos->Line('.$tipo_comanda.');
-            $escpos->Double(false);
-            $escpos->Width(false);
-            $escpos->Line('.$fecha_hoy.');
-            $escpos->Line("AUX:' .$s_nombre.'");
-            $escpos->Line("__________________________________________");
-            $escpos->Align("left");';
+            $escpos = new KEscPos('TM-U220B AFU', $print, true, true);
+            $escpos -> Font("A");
+            $escpos -> Align("center");
+            $escpos -> Double(true);
+            $escpos -> Width("double");
+            $escpos -> Line("");
+            $escpos -> Line("");
+            $escpos -> Line($print_original);
+            $escpos -> Line("COMANDA #".$id);
+            $escpos -> Line($tipo_comanda);
+            $escpos -> Double(false);
+            $escpos -> Width(false);
+            $escpos -> Line($fecha_hoy);
+            $escpos -> Line("AUX: $s_nombre");
+            $escpos -> Line("__________________________________________");
+            $escpos -> Align("left");
             foreach ($data as $val) {
                 $comentarios = $val['comentarios'];
 
@@ -1605,44 +1637,44 @@ $var = '';
                     $cantidad = $val['cantidad'];
                     $comentarios = $val['comentarios'];
                     $comentarios = explode("\n", $comentarios);
-                   $var.=' $escpos->Line("");
+                    $escpos -> Line("");
 
-                    $escpos->Width("double");
-                    $escpos->Line("-'." ".$cantidad." ".$nombre.'");';
+                    $escpos -> Width("double");
+                    $escpos -> Line("- $cantidad $nombre");
                     if (count($comentarios) > 0) {
                         foreach ($comentarios as $com) {
                             $com = trim($com);
                             if ($com) {
-                                $var.='$escpos->Line("  * '.$com.'");';
+                                $escpos -> Line("  * $com");
                             }
                         }
                     }
                 } else {
                     $nombre = trim($val['nombre']);
 
-                    $var.='$escpos->Width("double");
-                    $escpos->Line("  * '.$nombre.'");';
+                    $escpos -> Width("double");
+                    $escpos -> Line("  * $nombre");
 
                 }
 
 
             } //foreach $data
-            $var.='$escpos->Width(false);
+            $escpos -> Width(false);
 
-            $escpos->Line("__________________________________________");';
+            $escpos -> Line("__________________________________________");
 
         } // foreach $v
 
-        $var.='$escpos->Line("");
-        $escpos->Line("");
-        $escpos->Line("");
-        $escpos->Cut();
-        $escpos->Close();';
+        $escpos -> Line("");
+        $escpos -> Line("");
+        $escpos -> Line("");
+        $escpos -> Cut();
+        $escpos -> Close();
 
 
     } // foreach $impresion
 
-    return $var;
+    return '1';
 }
 
 
@@ -1681,7 +1713,7 @@ function abrir_caja()
 
         ';
 
-    //eval ($var);
+    eval ($var);
     return $var;
 
 }
@@ -1689,9 +1721,16 @@ function abrir_caja()
 //final de la funcion
 function return_linea($linea)
 {
-    if (strlen($linea) > 0):
-        return 'esc_pos_line($printer, "' . $linea . '");';
-    endif;
+    $linea = trim((string)$linea);
+    if ($linea === '') {
+        return '';
+    }
+
+    if (stripos($linea, 'Coupon Generator') !== false || stripos($linea, 'TM-T88') !== false || stripos($linea, 'EPSON') !== false) {
+        return '';
+    }
+
+    return 'esc_pos_line($printer, "' . $linea . '");';
 }
 
 
@@ -1986,7 +2025,7 @@ esc_pos_close($printer);
 ';
 
     if ($autoprint) {
-        //eval ($var);
+        eval ($var);
         return $var;
     }
 
@@ -2006,6 +2045,14 @@ esc_pos_close($printer);
 
 
 
+if (!function_exists('normaliza_monto_impresora')) {
+    function normaliza_monto_impresora($valor)
+    {
+        $valor = str_replace(',', '', trim((string)$valor));
+        return floatval($valor);
+    }
+}
+
 function imprimir_mesa($id_venta, $tipo, $desc = false)
 {
    
@@ -2018,15 +2065,18 @@ function imprimir_mesa($id_venta, $tipo, $desc = false)
     global $salto;
     
 global $conexion;
+
     $sql = "SELECT SUM(cantidad*precio_venta) AS total FROM venta_detalle WHERE id_venta=$id_venta";
     $q = mysql_query($sql);
     $ft = mysql_fetch_assoc($q);
-    $consumo = $ft['total'];
+    $consumo = normaliza_monto_impresora($ft['total']);
 $var = '';
 $domi = '';
 $space0 = ''; 
 $g_total = 0;
 $efectivo = 0;
+$descuent0 = 0;
+$detalle = '';
 
 $fact = '';
 $status = '';
@@ -2035,16 +2085,16 @@ $status = '';
     $ve = mysql_fetch_assoc($q_venta);
     $op = $ve['mesa'];
     $metodo = $ve['metodo_txt'];
-    $pagarOriginal = $ve['pagarOriginal'];
-    $DescEfec_txt = $ve['DescEfec_txt'];
-    $monto_efectivo = $ve['monto_efectivo'];
-$monto_tarjeta = $ve['monto_tarjeta'];
-$monto_transferencia = $ve['monto_transferencia'];
+    $pagarOriginal = normaliza_monto_impresora($ve['pagarOriginal']);
+    $DescEfec_txt = normaliza_monto_impresora($ve['DescEfec_txt']);
+    $monto_efectivo = normaliza_monto_impresora($ve['monto_efectivo']);
+$monto_tarjeta = normaliza_monto_impresora($ve['monto_tarjeta']);
+$monto_transferencia = normaliza_monto_impresora($ve['monto_transferencia']);
 
-    $cambio = $ve['cambio_txt'];
+    $cambio = normaliza_monto_impresora($ve['cambio_txt']);
     $codigo = $ve['codigo_activacion'];
     $id_cliente = $ve['id_cliente'];
-    $id_descuento = $ve['descuento_txt'];
+    $id_descuento = intval($ve['descuento_txt']);
     $iva = $ve['facturado'];
     $iva_efectivo = $ve['monto_facturado'];
     //require_once('php_image_magician.php');
@@ -2052,7 +2102,7 @@ $monto_transferencia = $ve['monto_transferencia'];
 
     $var.='$img2 = "logo.jpg";
     if (file_exists($img2)) {
-        $escpos = new KEscPos('.'TM-T88IV AFU'.', $impresora_cuentas, true, true);
+        $escpos = new KEscPos("TM-T88IV AFU", $impresora_cuentas, true, true);
         $escpos->Align("center");
         $escpos->Image(false, $img2);
         $escpos->Close();
@@ -2422,6 +2472,12 @@ $monto_transferencia = $ve['monto_transferencia'];
             $descuento = $DescEfec_txt;
             $desc = $consumo - $DescEfec_txt;
         }
+        if ($descuento >= $consumo) {
+            $desc = 0;
+        }
+        if ($desc < 0) {
+            $desc = 0;
+        }
         $sub_num = number_format($consumo, 2);
         $descuento = number_format($descuento, 2);
         $desc = number_format($desc, 2);
@@ -2514,7 +2570,14 @@ $iva_efectivo = $ve['monto_facturado'];
             $iva_efectivo = $espacios . $iva_efectivo;
             $detalle .= 'esc_pos_line($printer, "' . $iva_efectivo . '");';
         }
-        $totalFin = number_format(($pagarOriginal - $descuent0), 2);
+        $total_calculado = $pagarOriginal - $descuent0;
+        if ($descuent0 >= $pagarOriginal) {
+            $total_calculado = 0;
+        }
+        if ($total_calculado < 0) {
+            $total_calculado = 0;
+        }
+        $totalFin = number_format($total_calculado, 2);
         $totalFin = "TOTAL: " . $totalFin;
         $cuantos_totalFin = 40 - strlen($totalFin);
         $espacios = "";
@@ -3776,9 +3839,9 @@ function acuse($id_venta, $id_venta_cancelacion, $motivo)
 
 
     if ($autoprint) {
-        return $var;
+        eval ($var);
     }
-   // return $html;
+    return $html;
 }
 
 function acuse_corte($id_venta, $id_venta_cancelacion, $motivo)
@@ -4220,6 +4283,9 @@ function acuse_corte($id_venta, $id_venta_cancelacion, $motivo)
 
 
 
+    if ($autoprint) {
+        eval ($var);
+    }
     return $var;
 }
 

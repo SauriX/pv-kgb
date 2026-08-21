@@ -7,6 +7,13 @@ include('../includes/funciones.php');
 include('../includes/impresora.php');
 include('../includes/postmark.php');
 
+if(!function_exists('normaliza_monto')){
+	function normaliza_monto($valor){
+		$valor = str_replace(',', '', trim((string)$valor));
+		return floatval($valor);
+	}
+}
+
 extract($_POST);
 $reimprime = isset($reimprime) ? $reimprime : 0;
 $id_metodo_pago = isset($id_metodo_pago) ? $id_metodo_pago : 99;
@@ -16,8 +23,10 @@ $monto_tarjeta = isset($monto_tarjeta) ? $monto_tarjeta : 0;
 $monto_transferencia = isset($monto_transferencia) ? $monto_transferencia : 0;
 
 $consumo_txt = isset($consumo_txt) ? $consumo_txt : 0;
+$total_txt = isset($total_txt) ? $total_txt : 0;
 $req_factura = isset($req_factura) ? $req_factura : 0;
 $num_cta_txt = isset($num_cta_txt) ? $num_cta_txt : '';
+$iva_total = isset($iva_total) ? $iva_total : 0;
 $iva_efect = isset($iva_efect) ? $iva_efect : 0;
 $codigo = isset($codigo) ? $codigo : '';
 $recibe_txt = isset($recibe_txt) ? $recibe_txt : 0;
@@ -29,9 +38,22 @@ $tc = isset($tc) ? $tc : 0;
 $id_venta_cobrar = isset($id_venta_cobrar) ? $id_venta_cobrar : 0;
 $check_imprimir = isset($check_imprimir) ? $check_imprimir : 'false';
 // 🔥 NORMALIZAR MONTOS
-$monto_efectivo = floatval($monto_efectivo);
-$monto_tarjeta = floatval($monto_tarjeta);
-$monto_transferencia = floatval($monto_transferencia);
+$monto_efectivo = normaliza_monto($monto_efectivo);
+$monto_tarjeta = normaliza_monto($monto_tarjeta);
+$monto_transferencia = normaliza_monto($monto_transferencia);
+$consumo_txt = normaliza_monto($consumo_txt);
+$total_txt = normaliza_monto($total_txt);
+$iva_total = normaliza_monto($iva_total);
+$iva_efect = normaliza_monto($iva_efect);
+$recibe_txt = normaliza_monto($recibe_txt);
+$cambio_txt = normaliza_monto($cambio_txt);
+$DescEfec_txt = normaliza_monto($DescEfec_txt);
+$pagarOriginal = normaliza_monto($pagarOriginal);
+
+if($tc){
+	$consumo_txt = $total_txt;
+}
+$descuento_txt = isset($descuento_txt) ? intval($descuento_txt) : 0;
 
 // 🔥 SUMA DE MÉTODOS
 $total_metodos = $monto_efectivo + $monto_tarjeta + $monto_transferencia;
@@ -40,14 +62,23 @@ if(!$reimprime){
 	
 	mysql_query("BEGIN");
 
-	if(!is_numeric($id_metodo_pago)) exit('Falta método de pago');
-	if($id_metodo_pago < 1) exit('Falta método de pago');
+	if(!is_numeric($id_metodo_pago) || $id_metodo_pago < 1){
+		$id_metodo_pago = 99;
+	}
 
 	// 🔥 VALIDACIÓN MULTIPAGO
-	if($total_metodos > 0){
-		if(abs($total_metodos - $consumo_txt) > 0.01){
-			exit('Los montos no coinciden con el total');
-		}
+	$no_efectivo = $monto_tarjeta + $monto_transferencia;
+	if($no_efectivo - $consumo_txt > 0.01){
+		exit('Tarjeta/transferencia no puede exceder el total');
+	}
+
+	$efectivo_requerido = $consumo_txt - $no_efectivo;
+	if($efectivo_requerido < 0){
+		$efectivo_requerido = 0;
+	}
+
+	if($monto_efectivo + 0.01 < $efectivo_requerido){
+		exit('Faltante por cubrir');
 	}
 
 	switch($id_metodo_pago){
@@ -82,10 +113,6 @@ if(!$reimprime){
 	}
 
 	if($monto_facturado > $consumo_txt) exit('El consumo no puede ser mayor al monto a facturar');
-
-	if($tc){
-		$consumo_txt = $total_txt;
-	}
 
 	$fechahora_pagada = date('Y-m-d H:i:s');
 

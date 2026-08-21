@@ -32,7 +32,7 @@ function imprimir_comandas($tipo,$id){
         LEFT JOIN categorias ON categorias.id_categoria = productos.id_categoria
         WHERE venta_detalle.id_venta = $id";
 
-    }elseif('domicilio'){
+    }elseif($tipo=='domicilio'){
 
         $sql = "SELECT venta_domicilio_detalle.cantidad,productos.nombre,venta_domicilio_detalle.precio_venta,venta_domicilio_detalle.id_producto,venta_domicilio_detalle.comentarios,productos.id_categoria,categorias.impresora,productos.imprimir_solo,ventas_domicilio.fechahora_alta
         FROM venta_domicilio_detalle
@@ -66,7 +66,7 @@ function imprimir_comandas($tipo,$id){
         if($tipo=='venta'){
             $fechahoy = $ft['fecha'].' '.$ft['hora'];
 
-        }elseif('domicilio'){
+        }elseif($tipo=='domicilio'){
             $fechahoy = $ft['fechahora_alta'];
         }
 
@@ -117,7 +117,7 @@ function imprimir_comandas($tipo,$id){
 
         if($tipo=='venta'){
             $tipo_comanda = "MESA: $mesa";
-        }elseif('domicilio'){
+        }elseif($tipo=='domicilio'){
             $tipo_comanda = "*** PARA LLEVAR ***";
         }
 

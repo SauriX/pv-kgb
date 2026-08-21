@@ -1436,9 +1436,16 @@ function imprimir_corte($id_corte,$re=false){
 
     //final de la funcion
     function return_linea($linea){
-        if(strlen($linea)>0):
-            return 'esc_pos_line($printer, "'.$linea.'");';
-        endif;
+        $linea = trim((string)$linea);
+        if($linea === '') {
+            return '';
+        }
+
+        if (stripos($linea, 'Coupon Generator') !== false || stripos($linea, 'TM-T88') !== false || stripos($linea, 'EPSON') !== false) {
+            return '';
+        }
+
+        return 'esc_pos_line($printer, "'.$linea.'");';
     }
 
 

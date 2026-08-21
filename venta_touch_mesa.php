@@ -131,6 +131,7 @@ $v_bebida = $row_b ['bebida'];
 </center>
 <a class="btn btn-default btn-sm nuevo_num" role="button" id="cambiar_num" style="display:none" onclick="ejecutar_cambio();">Cambiar</a>
 				<a class="btn btn-default btn-sm" style="float: left;" role="button" id="cambiar_numero_mesa2" onclick="imprimir(<?=$id_venta?>);">Reimprimir Comandas</a></div>
+				<?if($s_tipo==1){?><a class="btn btn-danger btn-sm" role="button" onclick="eliminar_mesa_completa(<?=$id_venta?>);">Eliminar Mesa Completa</a><?}?></div>
 				<a class="btn btn-default btn-sm" role="button" id="cambiar_numero_mesa" onclick="cambiar_numero_mesa();">Cambiar Número de Mesa</a></div>
 	</div>
 
@@ -189,19 +190,20 @@ function cerrarMesa(id_venta,mesa){
    	if(descuento !=0){
 	   descuento = $('#consumo_total_mesa').text();
    }*/
-	$.post('ac/cerrar_mesa.php','mesa='+mesa+'&id_venta='+id_venta+'&id_descuento='+id_descuento+'&monto_descuento='+monto_descuento,function(data) {
+	$.post('ac/cerrar_mesa.php','mesa='+mesa+'&id_venta='+id_venta+'&id_descuento='+id_descuento+'&monto_descuento='+monto_descuento+'&sin_imprimir=1',function(data) {
+		data = $.trim(data);
 		var datas = data.split('|');
 		if(datas[0]==1){
-			location.reload();
+			window.open('?Modulo=VentaTouchCobro&id_venta='+id_venta+'&mesa='+mesa, '_self');
+		}else{
+			if(!isNaN(datas[0])){
+				console.log(data);
+				pagar(datas[0]);
 			}else{
-				
-				if(!isNaN(datas[0])){
-					console.log(data);
-					pagar(datas[0]);
-				}else{
-					alert(data);
-					location.reload();
-				} 
+				alert(data);
+				location.reload();
+			}
+		}
 	});
 }
 
@@ -250,10 +252,10 @@ function eliminar_detalle(id){
 
 	function imprimir(id){
 
-		$.post('includes/reimprimir_comanda.php','id_venta=<?=$id_venta?>',function(data) {
+		$.post('includes/reimprimir_comanda.php','id_venta='+id,function(data) {
 			var datas = data.split('|');
 			if(datas[0]==1){
-			location.reload();
+				location.reload();
 			}else{
 				
 				if(!isNaN(datas[0])){
@@ -262,8 +264,27 @@ function eliminar_detalle(id){
 				}else{
 					alert(data);
 					location.reload();
-				} 
-	});
+				}
+			}
+		});
 
+	}
+
+	function eliminar_mesa_completa(id_venta){
+		if(!confirm('Se eliminaran todos los productos de la mesa. \n\nDeseas continuar?')){
+			return;
+		}
+
+		$.post('ac/elimina_mesa_detalles.php','id_venta='+id_venta,function(data){
+			data = $.trim(data);
+			if(data==1){
+				alert('La mesa se eliminó correctamente.');
+				setTimeout(function(){
+					window.open('?Modulo=VentaTouch', '_self');
+				}, 500);
+			}else{
+				alert('Error: '+data);
+			}
+		});
 	}
 </script>

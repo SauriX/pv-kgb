@@ -2,8 +2,8 @@
 
 <?		
 	include('../includes/db.php');
-	$sq="SELECT * FROM ventas 
-	JOIN metodo_pago ON ventas.id_metodo = metodo_pago.id_metodo
+	$sq="SELECT ventas.*, metodo_pago.metodo_pago AS metodo_catalogo FROM ventas 
+	LEFT JOIN metodo_pago ON ventas.id_metodo = metodo_pago.id_metodo
 	WHERE abierta = 0 AND pagada = 1 AND id_corte = 0 ORDER BY fechahora_pagada DESC ";
 	$q0=mysql_query($sq);
 	$valida=mysql_num_rows($q0);?>
@@ -36,7 +36,15 @@
 						<td><? if(is_numeric($mesa)){ echo 'MESA '.$mesa; }else{ echo $mesa; }?></td>
 						<td>$ <?=number_format($consumo_total,2)?></td>
 						<td><? $d = explode(' ', $ft['fechahora_pagada']); echo  substr($d[1],0,5);?></td>
-						<td><?=$ft['metodo_pago']?></td>
+						<td><?
+							if(isset($ft['metodo_catalogo']) && $ft['metodo_catalogo']!=''){
+								echo $ft['metodo_catalogo'];
+							}elseif(isset($ft['metodo_txt']) && $ft['metodo_txt']!=''){
+								echo $ft['metodo_txt'];
+							}else{
+								echo 'MIXTO';
+							}
+						?></td>
 						<td><? if($ft['facturado']){echo 'SI';}else{echo 'NO';} ?></td>
 						<td><? if($ft['reabierta']){echo 'SI';}else{echo 'NO';}?></td>
 						<td><a type="button" class="btn btn-success" href="#" onclick="verMesa(<?=$id_venta?>,'<?=$mesa?>')" >VER</a><br></td>

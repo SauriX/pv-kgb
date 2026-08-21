@@ -5,6 +5,17 @@ include("../includes/funciones.php");
 
 extract($_POST);
 
+$tipo = isset($tipo) ? $tipo : '';
+$id_categoria = isset($id_categoria) ? intval($id_categoria) : 0;
+$codigo = isset($codigo) ? $codigo : '';
+$nombre = isset($nombre) ? $nombre : '';
+$precio_venta = isset($precio_venta) ? $precio_venta : 0;
+$color = isset($color) ? $color : '';
+
+$sin = 0;
+$extra = 0;
+$pack = 0;
+
 //Validamos datos completos
 if($tipo != "pack"){
 if($id_categoria<=0) exit("Debe seleccionar una categoría.");
@@ -39,7 +50,7 @@ if($tipo == "Extra"){
 
 	if($tipo =="Producto"){
 		$extra =0;
-		$SIN=0;	
+		$sin=0;
 		$pack =0;
 		}
 
@@ -62,7 +73,7 @@ if($valida>0){
 	$id_producto=mysql_insert_id();
 	if($q){
 		if($extra==1){
-		$sql2="INSERT INTO productos_base (producto,precio,id_unidad) VALUES ('$nombre','$precio','3')";
+		$sql2="INSERT INTO productos_base (producto,precio,id_unidad) VALUES ('$nombre','$precio_venta','3')";
 	    $q2=mysql_query($sql2);}
 		
 		$hash = md5(time());

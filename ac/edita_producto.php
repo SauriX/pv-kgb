@@ -34,6 +34,9 @@ if(!$nombre) exit("Debe escribir un nombre para el producto.");
 if($tipo != "Sin"){
 	if(!$precio_venta) exit("Debe escribir un precio de venta para el producto.");
 	}
+$sin = 0;
+$extra = 0;
+$pack = 0;
 if($tipo == "Sine"){
 	$sin =1;
 	$extra =0;	

@@ -65,7 +65,15 @@ if(!mysql_query("BEGIN")) $error = true;
 $sq_corte="SELECT MAX(id_corte) as id FROM cortes WHERE abierto = 1 LIMIT 1";
 $q_corte=mysql_query($sq_corte);
 $row = mysql_fetch_array($q_corte);
-$id_corte = $row ['id'];
+$id_corte = isset($row['id']) ? intval($row['id']) : 0;
+
+if($id_corte <= 0){
+	$sql_new_corte = "INSERT INTO cortes (id_usuario,hora,fecha,abierto) VALUES ('$id_usuario','$hora','$fecha',1)";
+	if(!mysql_query($sql_new_corte)) $error = true;
+	$id_corte = intval(mysql_insert_id());
+}
+
+$id_corte = intval($id_corte);
 $id_corte_real = $id_corte;
 $sql = "UPDATE cortes SET hora = '$hora',fecha = '$fecha',efectivoCaja = '$efectivoCa',tpv = '$tpvEfec',otrosMet = '0',abierto = '0' WHERE id_corte = $id_corte";
 if(!mysql_query($sql)) $error = true;
@@ -98,16 +106,16 @@ if($error){
 	$nombres = array();
 	$pu = array();
 
-$montos_metodo = [];
-$me = [];
+$montos_metodo = array();
+$me = array();
 
 $mesas_monto = 0;
 $barra_monto = 0;
 $total_totales = 0;
 
-$prod = [];
-$nombres = [];
-$pu = [];
+$prod = array();
+$nombres = array();
+$pu = array();
 	while($fx = mysql_fetch_assoc($qx)){
 
 
@@ -173,6 +181,8 @@ $pu = [];
 		$mesas_monto_por = @($mesas_monto/$total_totales)*100;
 		$barra_monto_por = @($barra_monto/$total_totales)*100;
        $fecha_corte = $fecha." ".$hora;
+	  global $autoprint;
+	  $autoprint = true;
 	  imprimir_corte($id_corte);
 	   $cliente = curl_init();
 	   curl_setopt($cliente, CURLOPT_URL, "http://localhost/vendefacil_restaurante/ac/realiza_backup.php");

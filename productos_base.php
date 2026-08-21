@@ -1,7 +1,10 @@
 <?
 
-include('../includes/db.php');
-include('../includes/funciones.php');
+include('includes/session.php');
+include('includes/db.php');
+include('includes/funciones.php');
+
+$id_corte = isset($id_corte) ? intval($id_corte) : 0;
  
 
 
@@ -235,12 +238,12 @@ include('../includes/funciones.php');
 
 		  <div class="panel-body">
 		  <!-- Confirmación -->
-		  <? if($_GET['msg']==1){ ?>
+		  <? if(isset($_GET['msg']) && $_GET['msg']==1){ ?>
 		  		<div class="alert alert-dismissable alert-success">
 			  		<button type="button" class="close" data-dismiss="alert">×</button>
 			  		<p>El producto se ha agregado</p>
 			  	</div>
-		  <? }if($_GET['msg']==2){ ?>
+		  <? }if(isset($_GET['msg']) && $_GET['msg']==2){ ?>
 		  		<div class="alert alert-dismissable alert-info">
 			  		<button type="button" class="close" data-dismiss="alert">×</button>
 			  		<p>El producto se ha editado</p>
@@ -268,7 +271,7 @@ include('../includes/funciones.php');
 
 
 				  <td align="right">
-				  		<img src="img/load-azul.gif" border="0" id="load_<?=$ft['id_producto']?>" width="19" class="oculto" />
+			  		<img src="img/load-azul.gif" border="0" id="load_<?=$ingrediente['id']?>" width="19" class="oculto" />
 
 						<div class="btn-group btn_<?=$proyecto->id_proyecto?>">
                                         <a class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown" href="javascript:;" aria-expanded="false"> Opciones

@@ -68,6 +68,7 @@ if($valida){
 			
 		<div id="botones_accion row">
 				<a class="btn btn-default btn-sm" style="float: left;" role="button" id="cambiar_numero_mesa" onclick="imprimir(<?=$id_venta?>);">Reimprimir Comandas</a></div>
+				<a class="btn btn-danger btn-sm" role="button" onclick="eliminar_mesa_completa(<?=$id_venta?>);">Eliminar Mesa Completa</a></div>
 				<a class="btn btn-default btn-sm" role="button" id="cambiar_numero_mesa" onclick="cambiar_numero_mesa();">Cambiar Número de Mesa</a></div>
 	</div>
 	
@@ -114,13 +115,10 @@ $(function() {
 
 	function imprimir(id){
 		
-		$.post('includes/reimprimir_comanda.php','id_venta=<?=$id_venta?>',function(data) {
-		
-			
-				//window.open("?Modulo=VentaDomicilio", "_self");
-			
-			
-		
+		$.post('includes/reimprimir_comanda.php','id_venta='+id,function(data) {
+			if(data!=1){
+				alert(data);
+			}
 		});
 		
 	}
@@ -151,5 +149,23 @@ $(function() {
 		
 		});
 		
+	}
+
+	function eliminar_mesa_completa(id_venta){
+		if(!confirm('Se eliminaran todos los productos de la mesa. \n\nDeseas continuar?')){
+			return;
+		}
+
+		$.post('ac/elimina_mesa_detalles.php','id_venta='+id_venta,function(data){
+			data = $.trim(data);
+			if(data==1){
+				alert('La mesa se eliminó correctamente.');
+				setTimeout(function(){
+					recarga();
+				}, 500);
+			}else{
+				alert('Error: '+data);
+			}
+		});
 	}
 </script>

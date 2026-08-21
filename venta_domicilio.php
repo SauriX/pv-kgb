@@ -1691,7 +1691,7 @@ function pagar(id){
 		backdrop: 'static',
     	keyboard: false
 	});
-$('#pagarMesa').on('shown.bs.modal',function(e){
+	$('#pagarMesa').off('shown.bs.modal.pagarMesaAjuste').on('shown.bs.modal.pagarMesaAjuste',function(e){
 
     var data2 = $("#secre2").val();
 
@@ -1719,7 +1719,7 @@ $('#pagarMesa').on('shown.bs.modal',function(e){
     calcular_multipago();
     $('#recibe_txt').focus();
 
-});
+	});
 }
 $('[name="monto_efectivo"]').on('focus', function(){
 
@@ -2139,7 +2139,7 @@ if(!$touch){
 
 <!-- PAGAR MESA-->
 <div class="modal fade" id="pagarMesa">
-	<div class="modal-dialog" style="margin-top: 60px;">
+	<div class="modal-dialog" style="margin: 20px auto; width: 95%; max-width: 980px;">
 		<div class="modal-content">
 
 	<div class="modal-header">
@@ -2148,7 +2148,7 @@ if(!$touch){
 	</div>
 
 
-			<div class="modal-body">
+			<div class="modal-body" style="max-height: calc(100vh - 180px); overflow-y: auto; overflow-x: hidden;">
 			<form id="cobrar_pagar">
 			<input type="text" style="display: none;" value="false" id="check_imprimir" name="check_imprimir" >
 	      		<div class="row">
