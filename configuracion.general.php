@@ -87,6 +87,13 @@ $datos_conf=mysql_fetch_assoc($q_conf);
 					<input type="text" maxlength="64" class="form-control" id="impresora_sd" name="impresora_sd" value="<?=$datos_conf['impresora_sd']?>" autocomplete="off">
 				</div>
 			</div>
+
+			<div class="form-group">
+				<label for="impresora_sd_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Domicilio Para Llevar</label>
+				<div class="col-md-8">
+					<input type="text" maxlength="64" class="form-control" id="impresora_sd_para_llevar" name="impresora_sd_para_llevar" value="<?=$datos_conf['impresora_sd_para_llevar']?>" autocomplete="off">
+				</div>
+			</div>
 			
 			<div class="form-group">
 				<label for="impresora_cuentas" class="col-md-4 control-label" style="padding-top:5px;">Impresora de Comandas</label>
@@ -94,11 +101,25 @@ $datos_conf=mysql_fetch_assoc($q_conf);
 					<input type="text" maxlength="64" class="form-control" id="impresora_cuentas" name="impresora_cuentas" value="<?=$datos_conf['impresora_cuentas']?>" autocomplete="off">
 				</div>
 			</div>
+
+			<div class="form-group">
+				<label for="impresora_cuentas_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Comandas Para Llevar</label>
+				<div class="col-md-8">
+					<input type="text" maxlength="64" class="form-control" id="impresora_cuentas_para_llevar" name="impresora_cuentas_para_llevar" value="<?=$datos_conf['impresora_cuentas_para_llevar']?>" autocomplete="off">
+				</div>
+			</div>
 			
 			<div class="form-group">
 				<label for="impresora_cortes" class="col-md-4 control-label" style="padding-top:5px;">Impresora de Cortes</label>
 				<div class="col-md-8">
 					<input type="text" maxlength="64" class="form-control" id="impresora_cortes" name="impresora_cortes" value="<?=$datos_conf['impresora_cortes']?>" autocomplete="off">
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label for="impresora_cortes_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Cortes Para Llevar</label>
+				<div class="col-md-8">
+					<input type="text" maxlength="64" class="form-control" id="impresora_cortes_para_llevar" name="impresora_cortes_para_llevar" value="<?=$datos_conf['impresora_cortes_para_llevar']?>" autocomplete="off">
 				</div>
 			</div>
 			

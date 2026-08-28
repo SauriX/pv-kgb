@@ -20,7 +20,8 @@ if($ft){
 	$usuario = isset($ft['usuario']) ? $ft['usuario'] : '';
 	$id_tipo_usuario = isset($ft['id_tipo_usuario']) ? $ft['id_tipo_usuario'] : '';
 	$impresora = isset($ft['impresora']) ? $ft['impresora'] : '';
-	echo $nombre."|".$usuario."|".$id_tipo_usuario."|".$impresora;
+	$impresora_para_llevar = isset($ft['impresora_para_llevar']) ? $ft['impresora_para_llevar'] : '';
+	echo $nombre."|".$usuario."|".$id_tipo_usuario."|".$impresora."|".$impresora_para_llevar;
 }else{
 	echo "error|not_found";
 }

@@ -22,6 +22,7 @@ extract($_POST);
 if(!isset($numero_mesa)) $numero_mesa = '';
 if(!isset($domicilio)) $domicilio = 0;
 if(!isset($cobro)) $cobro = 0;
+if(!isset($para_llevar)) $para_llevar = 0;
 $sql="SELECT * FROM configuracion ";
 $q =mysql_query($sql);
 $ft=mysql_fetch_assoc($q);
@@ -51,6 +52,7 @@ if($numero_mesa){
 
 			$id_venta = @mysql_result($q,0);
 			$id_venta2 = $id_venta;
+			mysql_query("UPDATE ventas SET para_llevar='$para_llevar' WHERE id_venta='$id_venta'");
 			if(!$id_venta){
 				$error = true;
 				$mensaje = "No se pudo obtener id_venta";
@@ -62,8 +64,8 @@ if($numero_mesa){
 
 			
 			$sql = "INSERT INTO ventas
-				(id_usuario,fecha,hora,mesa,fechahora_cerrada,fechahora_pagada,id_metodo,facturado,monto_facturado,monto_pagado,codigo,metodo_txt,recibe_txt,cambio_txt,pendiente_facturar,pendiente_monto,descuento_txt,DescEfec_txt,pagarOriginal,codigo_activacion,domicilio)
-				VALUES('$id_usuario','$fecha','$hora','$numero_mesa','$fechahora_default','$fechahora_default','0','0','0.00','0.00','','','0.00','0.00','0','0.00','0','0.00','0.00','$codigo','$domicilio')";
+				(id_usuario,fecha,hora,mesa,fechahora_cerrada,fechahora_pagada,id_metodo,facturado,monto_facturado,monto_pagado,codigo,metodo_txt,recibe_txt,cambio_txt,pendiente_facturar,pendiente_monto,descuento_txt,DescEfec_txt,pagarOriginal,codigo_activacion,domicilio,para_llevar)
+				VALUES('$id_usuario','$fecha','$hora','$numero_mesa','$fechahora_default','$fechahora_default','0','0','0.00','0.00','','','0.00','0.00','0','0.00','0','0.00','0.00','$codigo','$domicilio','$para_llevar')";
 		
 			
 			$q = mysql_query($sql);
@@ -80,8 +82,8 @@ if($numero_mesa){
 		
 			
 				$sql2 = "INSERT INTO ventas
-					(id_usuario,fecha,hora,mesa,fechahora_cerrada,fechahora_pagada,id_metodo,facturado,monto_facturado,monto_pagado,codigo,metodo_txt,recibe_txt,cambio_txt,pendiente_facturar,pendiente_monto,descuento_txt,DescEfec_txt,pagarOriginal,codigo_activacion,id_sucursal,id_venta_sucursal,domicilio)
-					VALUES('$id_usuario','$fecha','$hora','$numero_mesa','$fechahora_default','$fechahora_default','0','0','0.00','0.00','','','0.00','0.00','0','0.00','0','0.00','0.00','$codigo','$sucursal','$id_venta','$domicilio')";
+					(id_usuario,fecha,hora,mesa,fechahora_cerrada,fechahora_pagada,id_metodo,facturado,monto_facturado,monto_pagado,codigo,metodo_txt,recibe_txt,cambio_txt,pendiente_facturar,pendiente_monto,descuento_txt,DescEfec_txt,pagarOriginal,codigo_activacion,id_sucursal,id_venta_sucursal,domicilio,para_llevar)
+					VALUES('$id_usuario','$fecha','$hora','$numero_mesa','$fechahora_default','$fechahora_default','0','0','0.00','0.00','','','0.00','0.00','0','0.00','0','0.00','0.00','$codigo','$sucursal','$id_venta','$domicilio','$para_llevar')";
 
 			
 			
@@ -98,8 +100,8 @@ if($numero_mesa){
 }else{
          
 			$sql = "INSERT INTO ventas
-				(id_usuario,fecha,hora,mesa,abierta,fechahora_cerrada,fechahora_pagada,id_metodo,facturado,monto_facturado,monto_pagado,codigo,metodo_txt,recibe_txt,cambio_txt,pendiente_facturar,pendiente_monto,descuento_txt,DescEfec_txt,pagarOriginal,codigo_activacion,domicilio)
-				VALUES('$id_usuario','$fecha','$hora','BARRA','0','$fechahora_default','$fechahora_default','0','0','0.00','0.00','','','0.00','0.00','0','0.00','0','0.00','0.00','$codigo','$domicilio')";
+				(id_usuario,fecha,hora,mesa,abierta,fechahora_cerrada,fechahora_pagada,id_metodo,facturado,monto_facturado,monto_pagado,codigo,metodo_txt,recibe_txt,cambio_txt,pendiente_facturar,pendiente_monto,descuento_txt,DescEfec_txt,pagarOriginal,codigo_activacion,domicilio,para_llevar)
+				VALUES('$id_usuario','$fecha','$hora','BARRA','0','$fechahora_default','$fechahora_default','0','0','0.00','0.00','','','0.00','0.00','0','0.00','0','0.00','0.00','$codigo','$domicilio','$para_llevar')";
 	
 			   
 			$q = mysql_query($sql);
@@ -166,10 +168,6 @@ if(count($item) < 3) continue;
 				$categorias = $ft['categorias'];
 			}
 
-			if($precio==0){
-				$nombre = '';
-				$categorias = '';
-			}
 		   
 			$sql="INSERT INTO venta_detalle(id_venta,id_producto,cantidad,precio_venta,comentarios,nombre,categoria)VALUES('$id_venta','$id_producto','$cantidad','$precio','$comentario','$nombre','$categorias')";
 			$query = mysql_query($sql);

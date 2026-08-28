@@ -43,10 +43,15 @@
 						<tbody>
 						<? 
 							while($ft=mysql_fetch_assoc($q)){
+								$hay_cortesia = false;
+								$q_detalle_cortesia = mysql_query("SELECT comentarios FROM venta_detalle WHERE id_venta=".$ft['id_venta']." AND comentarios LIKE '%[[DESC100]]%' LIMIT 1");
+								if($q_detalle_cortesia && mysql_num_rows($q_detalle_cortesia)>0){
+									$hay_cortesia = true;
+								}
 							?>
 							<tr>
 								<td><?=$ft['id_venta']?></td>
-								<td><?=$ft['mesa']?></td>
+									<td><?=$ft['mesa']?> <? if($hay_cortesia){ ?><span class="label label-warning">CORTESIA</span><? } ?></td>
 								<td><?
 								if($ft['pendiente_facturar']==1):
 									$msg = "(saldo de factura)";

@@ -92,6 +92,12 @@ $msg = isset($_GET['msg']) ? (int) $_GET['msg'] : 0;
 					<input type="text" class="form-control edit" id="nuevo_impresora" name="impresora" autocomplete="off" maxlength="20">
 				</div>
 			</div>
+			<div class="form-group">
+				<label for="codigo" class="col-md-3 control-label">Imp. Para Llevar</label>
+				<div class="col-md-9">
+					<input type="text" class="form-control edit" id="nuevo_impresora_para_llevar" name="impresora_para_llevar" autocomplete="off" maxlength="64">
+				</div>
+			</div>
 			
 		</form>
 		      
@@ -135,6 +141,12 @@ $msg = isset($_GET['msg']) ? (int) $_GET['msg'] : 0;
 					<input type="text" class="form-control edit" id="impresora" name="impresora" autocomplete="off" maxlength="20">
 				</div>
 			</div>
+			<div class="form-group">
+				<label for="codigo" class="col-md-3 control-label">Imp. Para Llevar</label>
+				<div class="col-md-9">
+					<input type="text" class="form-control edit" id="impresora_para_llevar" name="impresora_para_llevar" autocomplete="off" maxlength="64">
+				</div>
+			</div>
 			
 			<input type="hidden" name="id_categoria" id="id_categoria" />
 		</form>
@@ -170,6 +182,7 @@ $(function(){
 	   		var datos = data.split('|');
 			   $('#nombre').val(datos[0]);
 			   $('#impresora').val(datos[3]);
+			   $('#impresora_para_llevar').val(datos[4]);
 	   		$('#id_categoria').val(data_id);
 	   	},
 	   	cache: false
@@ -182,6 +195,8 @@ $(function(){
 	
 	$('#NuevaCategoria').on('hidden.bs.modal',function(e){	
 		$('#nuevo_nombre').val("");
+		$('#nuevo_impresora').val("");
+		$('#nuevo_impresora_para_llevar').val("");
 		$('#msg_error').hide();
 	});
 });

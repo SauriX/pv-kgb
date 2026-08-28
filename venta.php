@@ -309,6 +309,7 @@ if(!$corte_permiso){
 
 	$('#venta_cobrar').on('show.bs.modal', function (e) {
 		$('#numero_mesa').val('');
+		$('#para_llevar_cobro').val('0');
 		if(!$('.productos_a_cobrar').length){
 			CerrarBuscar();
 			return false;
@@ -696,12 +697,13 @@ function agregar(codigo,cantidad){
 	var html = '';
 
 	html+='<div class="row lista-productos" id="'+random+'">';
-	html+='<div class="col-md-8" class="lista_nombre">'+producto+'</div>';
-	html+='<div class="col-md-1 text-center" class="lista_cantidad">'+cantidad+'</div>';
-	html+='<div class="col-md-1 text-right" class="lista_unitario">'+Number(unitario).toFixed(2)+'</div>';
-	html+='<div class="col-md-1 text-right" class="lista_precio">'+Number(precio).toFixed(2)+'</div>';
-	html+='<div class="col-md-1 text-right" class="lista_eliminar"><span class="glyphicon glyphicon-remove red click" onclick="remover_item(\''+random+'\')"></span></div>';
-	html+='<input type="hidden" value="'+cantidad+'" name="cobrar_producto['+random+'_'+id_producto+'_'+unitario+']" data-precio="'+unitario+'" class="productos_a_cobrar">';
+	html+='<div class="col-md-7 lista_nombre">'+producto+' <span id="m_'+random+'" class="label label-warning" style="display:none; margin-left:6px;">CORTESIA</span></div>';
+	html+='<div class="col-md-1 text-center lista_cantidad">'+cantidad+'</div>';
+	html+='<div class="col-md-1 text-right lista_unitario" id="u_'+random+'">'+Number(unitario).toFixed(2)+'</div>';
+	html+='<div class="col-md-1 text-right lista_precio" id="p_'+random+'">'+Number(precio).toFixed(2)+'</div>';
+	html+='<div class="col-md-2 text-right lista_eliminar"><button type="button" class="btn btn-warning btn-xs" id="d_'+random+'" onclick="toggle_descuento_producto(\''+random+'\')">100%</button> <span class="glyphicon glyphicon-remove red click" onclick="remover_item(\''+random+'\')"></span></div>';
+	html+='<input type="hidden" value="'+cantidad+'" name="cobrar_producto['+random+'_'+id_producto+'_'+Number(unitario).toFixed(2)+']" data-precio="'+Number(unitario).toFixed(2)+'" data-precio-original="'+Number(unitario).toFixed(2)+'" data-id-producto="'+id_producto+'" data-descuento="0" id="h_'+random+'" class="productos_a_cobrar">';
+	html+='<input type="hidden" value="" id="adicional_'+random+'" name="adicional['+random+']">';
 	html+='</div>';
 
 	$('#lista_productos').append(html);
@@ -722,6 +724,41 @@ function actualizar_total(){
 
 //	$('#total_totales,#total_modal').val(Number(total).toFixed(2));
 	$('#total_totales').val(Number(total).toFixed(2));
+}
+
+function toggle_descuento_producto(random){
+	var hidden = $('#h_'+random);
+	if(!hidden.length){
+		return false;
+	}
+
+	var precioOriginal = Number(hidden.attr('data-precio-original')) || 0;
+	var cantidad = Number(hidden.val()) || 0;
+	var idProducto = hidden.attr('data-id-producto');
+	var descuentoAplicado = hidden.attr('data-descuento') == '1';
+	var nuevoPrecio = descuentoAplicado ? precioOriginal : 0;
+	var comentarioActual = $('#adicional_'+random).val() || '';
+	comentarioActual = comentarioActual.replace(/\n?\[\[DESC100\]\]/g, '');
+
+	hidden.attr('data-precio', Number(nuevoPrecio).toFixed(2));
+	hidden.attr('data-descuento', descuentoAplicado ? '0' : '1');
+	hidden.attr('name', 'cobrar_producto['+random+'_'+idProducto+'_'+Number(nuevoPrecio).toFixed(2)+']');
+	$('#adicional_'+random).val(descuentoAplicado ? comentarioActual : (comentarioActual ? comentarioActual+'\n[[DESC100]]' : '[[DESC100]]'));
+	$('#u_'+random).html(Number(nuevoPrecio).toFixed(2));
+	$('#p_'+random).html((cantidad*Number(nuevoPrecio)).toFixed(2));
+
+	if(descuentoAplicado){
+		$('#'+random).css('background-color', '');
+		$('#d_'+random).html('100%');
+		$('#m_'+random).hide();
+	}else{
+		$('#'+random).css('background-color', '#fcf8e3');
+		$('#d_'+random).html('Restaurar');
+		$('#m_'+random).show();
+	}
+
+	actualizar_total();
+	return false;
 }
 
 function dame_info(codigo){ 			//Devuelve en array toda la información del código del producto que se recibe. o no. o si.
@@ -921,6 +958,13 @@ function abrirCaja(){
 			  <span class="input-group-addon f18">Mesa: &nbsp;</span>
 			  <input type="text" autocomplete="off" id="numero_mesa" class="form-control input-lg total ">
 			</div>
+			<div class="input-group col-md-12 mb20 hidden_loader">
+			  <span class="input-group-addon f18">Para llevar</span>
+			  <select id="para_llevar_cobro" name="para_llevar" class="form-control input-lg">
+				<option value="0" selected>No</option>
+				<option value="1">Si</option>
+			  </select>
+			</div>
 		<!--
 			<div class="input-group col-md-12 mb20 hidden_loader">
 			  <span class="input-group-addon f18">Total: &nbsp;&nbsp;&nbsp;&nbsp;</span>
@@ -1081,6 +1125,14 @@ function abrirCaja(){
 				  					<option value="2">Si</option>
 			  					</select>
 			  				</div>
+
+				  			<div class="form-group">
+				  				<label for="para_llevar_pagar">Para llevar</label>
+				  				<select class="form-control" id="para_llevar_pagar" name="para_llevar">
+					  				<option value="0" selected>No</option>
+					  				<option value="1">Si</option>
+				  				</select>
+				  			</div>
 
 			  				<div class="form-group" id="monto_factura_div" style="display: none">
 			  					<label for="monto_facturado">Monto a Facturar:</label>

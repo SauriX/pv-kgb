@@ -1,7 +1,7 @@
 <?
 include("../includes/db.php");
 $id_venta=$_GET['id_venta'];
-$sq="SELECT venta_detalle.*, productos.nombre FROM venta_detalle 
+	$sq="SELECT venta_detalle.*, productos.nombre FROM venta_detalle 
 JOIN productos ON productos.id_producto=venta_detalle.id_producto
 WHERE id_venta=$id_venta";
 
@@ -37,8 +37,8 @@ if($valida){
 			//Sacamos los productos
 	 		$consumo_total+=$dat['cantidad']*$dat['precio_venta'];
 	 		?>
-	        <tr id="detalle_<?=$dat['id_detalle']?>">
-	        	<td width="240"><?=$dat['nombre']?></td>
+	        <tr id="detalle_<?=$dat['id_detalle']?>" <? if(strpos($dat['comentarios'], '[[DESC100]]') !== false){ ?>style="background-color:#fcf8e3;"<? } ?>>
+	        	<td width="240"><?=$dat['nombre']?> <? if(strpos($dat['comentarios'], '[[DESC100]]') !== false){ ?><span class="label label-warning">CORTESIA</span><? } ?></td>
 				<td width="70" align="right"><?=number_format($dat['precio_venta'],2)?></td>
 				<td width="30" align="center"><?=$dat['cantidad']?></td>
 				<td width="70" align="right"><?=number_format($dat['cantidad']*$dat['precio_venta'],2)?></td>

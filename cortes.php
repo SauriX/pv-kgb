@@ -1,12 +1,17 @@
 <?php
 
 $id_corte =	$_GET['id_corte'];
+$sq_para_llevar = "SELECT COUNT(*) AS total FROM ventas WHERE id_corte = $id_corte AND para_llevar = 1";
+$q_para_llevar = mysql_query($sq_para_llevar);
+$ft_para_llevar = mysql_fetch_assoc($q_para_llevar);
+$total_para_llevar = isset($ft_para_llevar['total']) ? intval($ft_para_llevar['total']) : 0;
 
 ?>
 <p><span>Total General: <span id="total_general"></span></span></p>
 <p><span>Total Facturado: <span id="total_fact"></span></span></p>
 <p><span>Total Tarjetas y Transferencias: <span id="total_tarjetas"></span></span></p>
 <p><b><span>Total No Facturado en Efectivo: <span id="total_nofact"></span></span></b></p>
+<p><span>Ventas Para Llevar: <?=$total_para_llevar?></span></p>
 <p><b><span style="color:#156d20">Monto Seleccionado: <span id="total_seleccionado">0.00</span></span></b></p>
 <p><b><span style="color:#a50202">Monto a Eliminar: <span id="total_eliminar">0.00</span></span></b></p>
 

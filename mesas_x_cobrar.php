@@ -52,9 +52,13 @@ $valida=mysql_num_rows($q);
 						    $sq="SELECT * FROM venta_detalle WHERE id_venta=$id_venta";
 						    $qu=mysql_query($sq);
 						    $consumo_total=0;
+						    $hay_cortesia = false;
 						    while($dat=mysql_fetch_assoc($qu)){
 						    	//Sacamos los productos
 						    	$consumo_total+=$dat['cantidad']*$dat['precio_venta'];
+						    	if(strpos($dat['comentarios'], '[[DESC100]]') !== false){
+						    		$hay_cortesia = true;
+						    	}
 						    }
 					    ?>
 				        <tr style="cursor: pointer;">
@@ -64,7 +68,7 @@ $valida=mysql_num_rows($q);
 						       }else{
 							       echo $mesa;
 						       }
-					        	?></td>
+					        	?> <? if($hay_cortesia){ ?><span class="label label-warning">CORTESIA</span><? } ?></td>
 							<td onclick="verConsumo(<?=$id_venta?>,'<?=$mesa?>')" align="right">$<?=number_format($consumo_total,2)?></td>
 							<td onclick="verConsumo(<?=$id_venta?>,'<?=$mesa?>')" align="right"><?
 
@@ -76,7 +80,7 @@ $valida=mysql_num_rows($q);
 
 <td style="text-align: right;cursor: default">
 
-<a class="btn btn-primary btn-xs rojos" id="<?=$mesa?>" href="#pagarMesa" monto ="<?=$consumo_total?>" mesa="<?=$mesa?>" mesa-x-pagar-id="<?=$id_venta?>" role="button" data-toggle="modal" data-dismiss="modal">Cobrar mesa</a>
+<a class="btn btn-primary btn-xs rojos" id="<?=$mesa?>" href="#pagarMesa" monto ="<?=$consumo_total?>" mesa="<?=$mesa?>" para-llevar="<?=$ft['para_llevar']?>" mesa-x-pagar-id="<?=$id_venta?>" role="button" data-toggle="modal" data-dismiss="modal">Cobrar mesa</a>
 
 </td>
 
@@ -149,11 +153,13 @@ $(function(){
 		    var id_venta = $(this).attr('mesa-x-pagar-id');
 			var monto = $(this).attr('monto');
 			var mesa = $(this).attr('mesa');
+			var para_llevar = $(this).attr('para-llevar');
 
 			$('#pagar_mesa_titulo').html('Cobrar mesa '+mesa);
 			$('#recibe_txt,#consumo_txt,#cambio_txt,#numero_cuenta,#monto_facturado').val('');
 			$('#monto_factura_div').hide();
 			$('#req_factura,#id_metodo_pago').val('0');
+			$('#para_llevar_pagar').val(para_llevar);
 			$('#consumo_txt').val(Number(monto).toFixed(2));
 			$('#id_venta_cobrar').val(id_venta);
 			$('#cobrar_final').html('Cobrar').removeClass('btn-danger').addClass('btn-success');

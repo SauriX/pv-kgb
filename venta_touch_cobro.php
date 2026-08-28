@@ -6,12 +6,13 @@ $q=mysql_query($sql);
 $ft=mysql_fetch_assoc($q);
 $consumo=$ft['total'];
 
-$sql = "SELECT pagada,facturado,descuento_txt FROM ventas WHERE id_venta = $id_venta";
+$sql = "SELECT pagada,facturado,descuento_txt,para_llevar FROM ventas WHERE id_venta = $id_venta";
 $q = mysql_query($sql);
 $dats = mysql_fetch_assoc($q);
 $pagada = $dats['pagada'];
 $facturado = $dats['facturado'];
 $id_descuento = $dats['descuento_txt'];
+$para_llevar = isset($dats['para_llevar']) ? (int)$dats['para_llevar'] : 0;
 $facturale = 0;
 
 if(($pagada==1)&&($facturado==1)) exit('Pagado y facturado already.');
@@ -270,6 +271,16 @@ function actualizaDescuento(){
 								<input type="text"class="form-control input-lg total"  name="total_txt" id="total_txt" readonly="1" value="<?=$consumo?>">
 							    </div>
 							 </div>
+
+								<div class="form-group form-group-lg">
+									<label class="col-sm-4 control-label">PARA LLEVAR</label>
+									<div class="col-sm-8">
+										<select class="form-control input-lg" name="para_llevar" id="para_llevar">
+											<option value="0" <? if($para_llevar==0){ ?>selected<? } ?>>No</option>
+											<option value="1" <? if($para_llevar==1){ ?>selected<? } ?>>Si</option>
+										</select>
+									</div>
+								</div>
 
 
 							<div class="form-group form-group-lg">

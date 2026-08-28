@@ -40,9 +40,13 @@ $valida=mysql_num_rows($q);
 						    $sq="SELECT * FROM venta_detalle WHERE id_venta=$id_venta";
 						    $qu=mysql_query($sq);
 						    $consumo_total=0;
+						    $hay_cortesia = false;
 						    while($dat=mysql_fetch_assoc($qu)){
 						    	//Sacamos los productos
 						    	$consumo_total+=$dat['cantidad']*$dat['precio_venta'];
+						    	if(strpos($dat['comentarios'], '[[DESC100]]') !== false){
+						    		$hay_cortesia = true;
+						    	}
 						    }
 					    ?>
 				        <tr style="cursor: pointer;" onclick="verConsumo(<?=$id_venta?>,'<?=$mesa?>')">
@@ -52,7 +56,7 @@ $valida=mysql_num_rows($q);
 						       }else{
 							       echo $mesa;
 						       }
-					        	?></td>
+					        	?> <? if($hay_cortesia){ ?><span class="label label-warning">CORTESIA</span><? } ?></td>
 							<td align="right">$<?=number_format($consumo_total,2)?></td>
 
 

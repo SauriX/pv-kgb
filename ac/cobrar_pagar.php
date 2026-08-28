@@ -37,6 +37,7 @@ $pagarOriginal = isset($pagarOriginal) ? $pagarOriginal : 0;
 $tc = isset($tc) ? $tc : 0;
 $id_venta_cobrar = isset($id_venta_cobrar) ? $id_venta_cobrar : 0;
 $check_imprimir = isset($check_imprimir) ? $check_imprimir : 'false';
+$para_llevar = isset($para_llevar) ? intval($para_llevar) : 0;
 // 🔥 NORMALIZAR MONTOS
 $monto_efectivo = normaliza_monto($monto_efectivo);
 $monto_tarjeta = normaliza_monto($monto_tarjeta);
@@ -156,6 +157,7 @@ if($cambio_txt == '') $cambio_txt = 0;
 	$sql="UPDATE ventas SET  
 		pagada=1,
 		abierta=0,
+		para_llevar='$para_llevar',
 		id_metodo='$id_metodo_pago',
 		num_cta='$num_cta_txt',
 		facturado='$facturado',

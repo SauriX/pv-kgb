@@ -95,7 +95,7 @@ if(!$vxe){
             $id_temporal=$item[0];
     		$id_producto = $item[1];
     		$precio = $item[2];
-            $comentario=$adicional[$id_temporal];
+            $comentario = isset($adicional[$id_temporal]) ? $adicional[$id_temporal] : '';
             if($id_producto==""){ continue; }
 
     		$sql="INSERT INTO venta_domicilio_detalle (id_venta_domicilio,id_producto,cantidad,precio_venta,comentarios)VALUES('$id_venta_domicilio','$id_producto','$cantidad','$precio','$comentario')";

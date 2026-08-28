@@ -45,10 +45,16 @@ if($paquete=="on"){
 $establecimiento=limpiaStr($establecimiento,1,1);
 $representante=limpiaStr($representante,1,1);
 $direccion=limpiaStr($direccion,1,1);
+$impresora_sd=limpiaStr($impresora_sd,1,1);
+$impresora_sd_para_llevar=limpiaStr($impresora_sd_para_llevar,1,1);
+$impresora_cuentas=limpiaStr($impresora_cuentas,1,1);
+$impresora_cuentas_para_llevar=limpiaStr($impresora_cuentas_para_llevar,1,1);
+$impresora_cortes=limpiaStr($impresora_cortes,1,1);
+$impresora_cortes_para_llevar=limpiaStr($impresora_cortes_para_llevar,1,1);
 
 
 	//Insertamos datos
-	$sql="UPDATE configuracion SET auto_cobro='$autocash' ,establecimiento='$establecimiento', representante='$representante', rfc='$rfc', telefono='$telefono', direccion='$direccion', comandain='$comandaim', autobackup='$autobackup',impresora_sd='$impresora_sd',impresora_cuentas='$impresora_cuentas',impresora_cortes='$impresora_cortes',paquetes='$paquete'";
+	$sql="UPDATE configuracion SET auto_cobro='$autocash' ,establecimiento='$establecimiento', representante='$representante', rfc='$rfc', telefono='$telefono', direccion='$direccion', comandain='$comandaim', autobackup='$autobackup',impresora_sd='$impresora_sd',impresora_sd_para_llevar='$impresora_sd_para_llevar',impresora_cuentas='$impresora_cuentas',impresora_cuentas_para_llevar='$impresora_cuentas_para_llevar',impresora_cortes='$impresora_cortes',impresora_cortes_para_llevar='$impresora_cortes_para_llevar',paquetes='$paquete'";
 	$q=mysql_query($sql);
 	if($q){
 		echo "1";

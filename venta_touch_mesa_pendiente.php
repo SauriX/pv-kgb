@@ -68,8 +68,8 @@ $valida=mysql_num_rows($qu);
 					//Sacamos los productos
 					$consumo_total+=$dat['cantidad']*$dat['precio_venta'];
 				?>
-				<tr id="detalle_<?=$dat['id_detalle']?>">
-					<td><?=$dat['nombre']?></td>
+				<tr id="detalle_<?=$dat['id_detalle']?>" <? if(strpos($dat['comentarios'], '[[DESC100]]') !== false){ ?>style="background-color:#fcf8e3;"<? } ?>>
+					<td><?=$dat['nombre']?> <? if(strpos($dat['comentarios'], '[[DESC100]]') !== false){ ?><span class="label label-warning">CORTESIA</span><? } ?></td>
 					<td align="right"><?=number_format($dat['precio_venta'],2)?></td>
 					<td align="center"><?=$dat['cantidad']?></td>
 					<td align="right"><?=number_format($dat['cantidad']*$dat['precio_venta'],2)?></td>

@@ -4,6 +4,16 @@ session_start();
 //@include('session.php');
 //@include('funciones.php');
 @include('kescpos.drv.php');
+$sql_configuracion = "SELECT * FROM configuracion";
+$q_configuracion = mysql_query($sql_configuracion);
+$configuracion_impresion = mysql_fetch_assoc($q_configuracion);
+$impresora_sd_para_llevar = isset($configuracion_impresion['impresora_sd_para_llevar']) ? $configuracion_impresion['impresora_sd_para_llevar'] : '';
+
+function impresora_ext_preferida_para_llevar($preferida, $base)
+{
+    $preferida = trim((string)$preferida);
+    return $preferida != '' ? $preferida : trim((string)$base);
+}
 
 /*
 QUITAR ACENTOS
@@ -34,7 +44,7 @@ function imprimir_comandas($tipo,$id){
 
     }elseif($tipo=='domicilio'){
 
-        $sql = "SELECT venta_domicilio_detalle.cantidad,productos.nombre,venta_domicilio_detalle.precio_venta,venta_domicilio_detalle.id_producto,venta_domicilio_detalle.comentarios,productos.id_categoria,categorias.impresora,productos.imprimir_solo,ventas_domicilio.fechahora_alta
+        $sql = "SELECT venta_domicilio_detalle.cantidad,productos.nombre,venta_domicilio_detalle.precio_venta,venta_domicilio_detalle.id_producto,venta_domicilio_detalle.comentarios,productos.id_categoria,categorias.impresora,categorias.impresora_para_llevar,productos.imprimir_solo,ventas_domicilio.fechahora_alta
         FROM venta_domicilio_detalle
         LEFT JOIN ventas_domicilio ON ventas_domicilio.id_venta_domicilio = venta_domicilio_detalle.id_venta_domicilio
         LEFT JOIN productos ON productos.id_producto = venta_domicilio_detalle.id_producto
@@ -62,6 +72,9 @@ function imprimir_comandas($tipo,$id){
         $comentarios = eliminar_tildes($ft['comentarios']);
         $mesa = $ft['mesa'];
         $impresora = $ft['impresora'];
+        if($tipo == 'domicilio'){
+            $impresora = impresora_ext_preferida_para_llevar($ft['impresora_para_llevar'], $impresora);
+        }
         $imprimir_solo = $ft['imprimir_solo'];
         if($tipo=='venta'){
             $fechahoy = $ft['fecha'].' '.$ft['hora'];
@@ -182,10 +195,15 @@ function imprimir_comandas($tipo,$id){
 
 }
 
-function imprimir_ticket_domicilio($id, $impresora = 'DOMICILIO2'){
+function imprimir_ticket_domicilio($id, $impresora = false){
 
     global $s_nombre;
     global $conexion;
+    global $impresora_sd_para_llevar;
+
+    if(!$impresora){
+        $impresora = impresora_ext_preferida_para_llevar($impresora_sd_para_llevar, 'DOMICILIO2');
+    }
    // $impresora = "EPSON";
 
     $sql = "SELECT domicilio_direcciones.direccion,

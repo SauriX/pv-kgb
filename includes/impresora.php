@@ -9,10 +9,23 @@ $autoprint = $datos_config['autoprint'];
 $abrir_caja = $datos_config['abrir_caja'];
 $enviar_sms = $datos_config['enviar_sms'];
 $impresora_sd = $datos_config['impresora_sd'];
+$impresora_sd_para_llevar = $datos_config['impresora_sd_para_llevar'];
 $impresora_cuentas = $datos_config['impresora_cuentas'];
+$impresora_cuentas_para_llevar = $datos_config['impresora_cuentas_para_llevar'];
 $impresora_cortes = $datos_config['impresora_cortes'];
+$impresora_cortes_para_llevar = $datos_config['impresora_cortes_para_llevar'];
 $impresora_cobros = $datos_config['impresora_cobros'];
 $comandain = $datos_config['comandain'];
+
+function impresora_preferida_para_llevar($preferida, $base)
+{
+    $preferida = trim((string)$preferida);
+    if ($preferida != '') {
+        return $preferida;
+    }
+
+    return trim((string)$base);
+}
 
 function array_sort_by(&$arrIni, $col, $order = SORT_ASC)
 {
@@ -329,6 +342,7 @@ $precorteTexto = '';
     //array_sort_by($nombres, 'ord', $order = SORT_ASC);
     $mesas_ct = 0;
     $barra_ct = 0;
+    $para_llevar_ct = 0;
     $pre_fact_ct = 0;
     $no_fact_ct = 0;
 
@@ -361,6 +375,10 @@ while ($ft = mysql_fetch_assoc($q)) {
     } else {
         $barra_ct++;
         $barra_monto = (isset($barra_monto) ? $barra_monto : 0) + $ft['monto_pagado'];
+    }
+
+    if (isset($ft['para_llevar']) && intval($ft['para_llevar']) == 1) {
+        $para_llevar_ct++;
     }
 
     $total_totales = (isset($total_totales) ? $total_totales : 0) + $ft['monto_pagado'];
@@ -636,6 +654,7 @@ esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
     esc_pos_line($printer, "TRANSFERENCIAS: ' . $transferencia . '");
     esc_pos_line($printer, "");
     esc_pos_line($printer, "CUENTAS EXPEDIDAS: ' . $cta_expedidas . '");
+    esc_pos_line($printer, "VENTAS PARA LLEVAR: ' . $para_llevar_ct . '");
     esc_pos_line($printer, "PROMEDIO POR CUENTA: ' . $promedio . '");
     esc_pos_line($printer, "CANCELACIONES: ' . $cancelaciones . '");
     esc_pos_line($printer, " ");
@@ -1268,11 +1287,12 @@ $impresion = array();
     global $impresorapapa;
     global $comandain;
     global $impresora_cuentas;
+    global $impresora_cuentas_para_llevar;
     global $salto;
 
     if ($tipo == 'venta') {
 
-        $sql = "SELECT productos.paquete, productos.sinn,productos.extra, venta_detalle.cantidad, productos.nombre, venta_detalle.precio_venta, venta_detalle.id_producto, venta_detalle.comentarios, productos.id_categoria, categorias.impresora, productos.imprimir_solo, ventas.mesa, ventas.hora, ventas.fecha
+        $sql = "SELECT productos.paquete, productos.sinn,productos.extra, venta_detalle.cantidad, productos.nombre, venta_detalle.precio_venta, venta_detalle.id_producto, venta_detalle.comentarios, productos.id_categoria, categorias.impresora, categorias.impresora_para_llevar, productos.imprimir_solo, ventas.mesa, ventas.hora, ventas.fecha, ventas.para_llevar
             FROM venta_detalle
             LEFT JOIN ventas ON ventas.id_venta = venta_detalle.id_venta
             LEFT JOIN productos ON productos.id_producto = venta_detalle.id_producto
@@ -1284,7 +1304,7 @@ $impresion = array();
 
     } elseif ($tipo=='domicilio') {
 
-        $sql = "SELECT venta_domicilio_detalle.cantidad,productos.nombre,venta_domicilio_detalle.precio_venta,venta_domicilio_detalle.id_producto,venta_domicilio_detalle.comentarios,productos.id_categoria,categorias.impresora,productos.imprimir_solo,ventas_domicilio.fechahora_alta
+        $sql = "SELECT venta_domicilio_detalle.cantidad,productos.nombre,venta_domicilio_detalle.precio_venta,venta_domicilio_detalle.id_producto,venta_domicilio_detalle.comentarios,productos.id_categoria,categorias.impresora,categorias.impresora_para_llevar,productos.imprimir_solo,ventas_domicilio.fechahora_alta
             FROM venta_domicilio_detalle
             LEFT JOIN ventas_domicilio ON ventas_domicilio.id_venta_domicilio = venta_domicilio_detalle.id_venta_domicilio
             LEFT JOIN productos ON productos.id_producto = venta_domicilio_detalle.id_producto
@@ -1323,7 +1343,12 @@ $impresion = array();
             $comentarios = $ft['comentarios'];
 
             $mesa = $ft['mesa'];
-            $impresora = $ft['impresora'];
+            $para_llevar = ($tipo == 'domicilio') ? 1 : (isset($ft['para_llevar']) ? intval($ft['para_llevar']) : 0);
+            if ($para_llevar == 1) {
+                $impresora = impresora_preferida_para_llevar($ft['impresora_para_llevar'], $ft['impresora']);
+            } else {
+                $impresora = $ft['impresora'];
+            }
 
             $impresorapapa = $impresora;
             $imprimir_solo = $ft['imprimir_solo'];
@@ -1360,6 +1385,7 @@ $impresion = array();
                 $impresion[$c]["$impresora"][$c2]['cantidad'] = $cantidad;
                 $impresion[$c]["$impresora"][$c2]['precio'] = $precio;
                 $impresion[$c]["$impresora"][$c2]['comentarios'] = $comentarios;
+                $impresion[$c]["$impresora"][$c2]['para_llevar'] = $para_llevar;
 
 
 
@@ -1428,6 +1454,7 @@ $impresion = array();
                 $impresion[$c]["$impresora"][$c2]['cantidad'] = $cantidad;
                 $impresion[$c]["$impresora"][$c2]['precio'] = $precio;
                 $impresion[$c]["$impresora"][$c2]['comentarios'] = $comentarios;
+                $impresion[$c]["$impresora"][$c2]['para_llevar'] = $para_llevar;
 
 
 
@@ -1494,6 +1521,7 @@ $impresion = array();
                 $impresion[$c]["$impresora"][$c2]['cantidad'] = $cantidad;
                 $impresion[$c]["$impresora"][$c2]['precio'] = $precio;
                 $impresion[$c]["$impresora"][$c2]['comentarios'] = $comentarios;
+                $impresion[$c]["$impresora"][$c2]['para_llevar'] = $para_llevar;
 
 
 
@@ -1561,6 +1589,7 @@ $impresion = array();
                 $impresion[$c]["$impresora"][$c2]['cantidad'] = $cantidad;
                 $impresion[$c]["$impresora"][$c2]['precio'] = $precio;
                 $impresion[$c]["$impresora"][$c2]['comentarios'] = $comentarios;
+                $impresion[$c]["$impresora"][$c2]['para_llevar'] = $para_llevar;
 
 
 
@@ -1602,8 +1631,17 @@ $impresion = array();
 
         foreach ($v as $print => $data) {
             $print_original = $print;
+            $primer_registro = reset($data);
+            $venta_para_llevar = isset($primer_registro['para_llevar']) ? intval($primer_registro['para_llevar']) : 0;
+            if ($venta_para_llevar == 1) {
+                $tipo_comanda = "*** PARA LLEVAR ***";
+            }
             if ($comandain == "1" || trim($print) == "") {
-                $print = $impresora_cuentas;
+                if ($venta_para_llevar == 1) {
+                    $print = impresora_preferida_para_llevar($impresora_cuentas_para_llevar, $impresora_cuentas);
+                } else {
+                    $print = $impresora_cuentas;
+                }
 
             }
             if(trim($print) == ""){
@@ -1644,6 +1682,9 @@ $impresion = array();
                     if (count($comentarios) > 0) {
                         foreach ($comentarios as $com) {
                             $com = trim($com);
+                            if ($com == '[[DESC100]]') {
+                                $com = 'DESC. 100%';
+                            }
                             if ($com) {
                                 $escpos -> Line("  * $com");
                             }
@@ -2062,6 +2103,7 @@ function imprimir_mesa($id_venta, $tipo, $desc = false)
     global $abrir_caja;
     global $impresora_cobros;
     global $impresora_cuentas;
+    global $impresora_cuentas_para_llevar;
     global $salto;
     
 global $conexion;
@@ -2099,10 +2141,18 @@ $monto_transferencia = normaliza_monto_impresora($ve['monto_transferencia']);
     $iva_efectivo = $ve['monto_facturado'];
     //require_once('php_image_magician.php');
     $domicilio = $ve['domicilio'];
+    $para_llevar = isset($ve['para_llevar']) ? intval($ve['para_llevar']) : 0;
+    $impresora_ticket = $impresora_cuentas;
+    $impresora_cobro_ticket = $impresora_cobros;
+
+    if ($para_llevar == 1) {
+        $impresora_ticket = impresora_preferida_para_llevar($impresora_cuentas_para_llevar, $impresora_cuentas);
+        $impresora_cobro_ticket = $impresora_ticket;
+    }
 
     $var.='$img2 = "logo.jpg";
     if (file_exists($img2)) {
-        $escpos = new KEscPos("TM-T88IV AFU", $impresora_cuentas, true, true);
+        $escpos = new KEscPos("TM-T88IV AFU", $impresora_ticket, true, true);
         $escpos->Align("center");
         $escpos->Image(false, $img2);
         $escpos->Close();
@@ -2123,7 +2173,7 @@ $monto_transferencia = normaliza_monto_impresora($ve['monto_transferencia']);
 
     if ($tipo == "cerrar") {
         //cuenta
-        $var_print = '$printer = esc_pos_open("' . $impresora_cuentas . '", "ch-latin-2", false, true);';
+        $var_print = '$printer = esc_pos_open("' . $impresora_ticket . '", "ch-latin-2", false, true);';
     } else {
         //cobro
 
@@ -2133,7 +2183,7 @@ $monto_transferencia = normaliza_monto_impresora($ve['monto_transferencia']);
 
 
         $var_print = '
-        $printer = esc_pos_open("' . $impresora_cobros . '", "ch-latin-2", false, true); ' . $abrir_caja_cmd;
+        $printer = esc_pos_open("' . $impresora_cobro_ticket . '", "ch-latin-2", false, true); ' . $abrir_caja_cmd;
     }
 
     $var .= $var_print;
@@ -2207,6 +2257,9 @@ $monto_transferencia = normaliza_monto_impresora($ve['monto_transferencia']);
     if ($domicilio == 1) {
         $domi = '
         esc_pos_line($printer, "-----------servicio a domicilio-----------");';
+    } elseif ($para_llevar == 1) {
+        $domi = '
+        esc_pos_line($printer, "--------------para llevar-----------------");';
     }
     $var .= '
     esc_pos_line($printer, "' . $fecha_hora_ticket . '");
@@ -2216,7 +2269,7 @@ $monto_transferencia = normaliza_monto_impresora($ve['monto_transferencia']);
     esc_pos_align($printer, "left");
     esc_pos_line($printer, "PRODUCTO               CANT   UNIT    SUBT");';
 
-    $sql = "SELECT venta_detalle.cantidad,productos.nombre,venta_detalle.precio_venta  FROM venta_detalle
+    $sql = "SELECT venta_detalle.cantidad,productos.nombre,venta_detalle.precio_venta,venta_detalle.comentarios  FROM venta_detalle
     JOIN productos ON productos.id_producto = venta_detalle.id_producto
     WHERE id_venta = '$id_venta'";
     $q = mysql_query($sql);
@@ -2301,6 +2354,8 @@ $monto_transferencia = normaliza_monto_impresora($ve['monto_transferencia']);
         $total = $ft['cantidad'] * $ft['precio_venta'];
         $g_total += $total;
         $total = number_format($total, 2, '.', '');
+        $comentario_producto = isset($ft['comentarios']) ? $ft['comentarios'] : '';
+        $tiene_descuento_total = strpos($comentario_producto, '[[DESC100]]') !== false;
 
         $prec = strlen($precio);
         $cant = strlen($cantidad);
@@ -2355,6 +2410,9 @@ $monto_transferencia = normaliza_monto_impresora($ve['monto_transferencia']);
                 break;
         }
         $var .= 'esc_pos_line($printer, "' . $producto . $space0 . $cantidad . $space2 . $precio . $space3 . $total . '");';
+        if ($tiene_descuento_total) {
+            $var .= 'esc_pos_line($printer, "  * DESC. 100%");';
+        }
         unset($space0);
     }
     //exit($var2);
