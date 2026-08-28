@@ -84,42 +84,56 @@ $datos_conf=mysql_fetch_assoc($q_conf);
 			<div class="form-group">
 				<label for="impresora_sd" class="col-md-4 control-label" style="padding-top:5px;">Impresora Servicio a Domicilio</label>
 				<div class="col-md-8">
-					<input type="text" maxlength="64" class="form-control" id="impresora_sd" name="impresora_sd" value="<?=$datos_conf['impresora_sd']?>" autocomplete="off">
+					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_sd" name="impresora_sd" value="<?=$datos_conf['impresora_sd']?>" autocomplete="off">
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label for="impresora_sd_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Domicilio Para Llevar</label>
 				<div class="col-md-8">
-					<input type="text" maxlength="64" class="form-control" id="impresora_sd_para_llevar" name="impresora_sd_para_llevar" value="<?=$datos_conf['impresora_sd_para_llevar']?>" autocomplete="off">
+					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_sd_para_llevar" name="impresora_sd_para_llevar" value="<?=$datos_conf['impresora_sd_para_llevar']?>" autocomplete="off">
 				</div>
 			</div>
 			
 			<div class="form-group">
 				<label for="impresora_cuentas" class="col-md-4 control-label" style="padding-top:5px;">Impresora de Comandas</label>
 				<div class="col-md-8">
-					<input type="text" maxlength="64" class="form-control" id="impresora_cuentas" name="impresora_cuentas" value="<?=$datos_conf['impresora_cuentas']?>" autocomplete="off">
+					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cuentas" name="impresora_cuentas" value="<?=$datos_conf['impresora_cuentas']?>" autocomplete="off">
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label for="impresora_cuentas_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Comandas Para Llevar</label>
 				<div class="col-md-8">
-					<input type="text" maxlength="64" class="form-control" id="impresora_cuentas_para_llevar" name="impresora_cuentas_para_llevar" value="<?=$datos_conf['impresora_cuentas_para_llevar']?>" autocomplete="off">
+					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cuentas_para_llevar" name="impresora_cuentas_para_llevar" value="<?=$datos_conf['impresora_cuentas_para_llevar']?>" autocomplete="off">
 				</div>
 			</div>
 			
 			<div class="form-group">
+				<label for="impresora_cobros" class="col-md-4 control-label" style="padding-top:5px;">Impresora de Cobros</label>
+				<div class="col-md-8">
+					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cobros" name="impresora_cobros" value="<?=$datos_conf['impresora_cobros']?>" autocomplete="off">
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label for="impresora_cobros_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Cobros Para Llevar</label>
+				<div class="col-md-8">
+					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cobros_para_llevar" name="impresora_cobros_para_llevar" value="<?=$datos_conf['impresora_cobros_para_llevar']?>" autocomplete="off">
+				</div>
+			</div>
+
+			<div class="form-group">
 				<label for="impresora_cortes" class="col-md-4 control-label" style="padding-top:5px;">Impresora de Cortes</label>
 				<div class="col-md-8">
-					<input type="text" maxlength="64" class="form-control" id="impresora_cortes" name="impresora_cortes" value="<?=$datos_conf['impresora_cortes']?>" autocomplete="off">
+					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cortes" name="impresora_cortes" value="<?=$datos_conf['impresora_cortes']?>" autocomplete="off">
 				</div>
 			</div>
 
 			<div class="form-group">
 				<label for="impresora_cortes_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Cortes Para Llevar</label>
 				<div class="col-md-8">
-					<input type="text" maxlength="64" class="form-control" id="impresora_cortes_para_llevar" name="impresora_cortes_para_llevar" value="<?=$datos_conf['impresora_cortes_para_llevar']?>" autocomplete="off">
+					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cortes_para_llevar" name="impresora_cortes_para_llevar" value="<?=$datos_conf['impresora_cortes_para_llevar']?>" autocomplete="off">
 				</div>
 			</div>
 			
@@ -139,6 +153,7 @@ $datos_conf=mysql_fetch_assoc($q_conf);
 
 			
 		</form>
+		<datalist id="impresoras_disponibles"></datalist>
 		      
       </div>
       <div class="modal-footer">
@@ -183,4 +198,37 @@ function ceros(){
 	    }
 	});
 };
+</script>
+<script>
+var impresora_configuracion = null;
+
+function cargarImpresorasDisponibles(){
+	if(typeof Printer === 'undefined'){
+		return;
+	}
+	if(!impresora_configuracion){
+		impresora_configuracion = new Printer(null);
+	}
+	impresora_configuracion.getPrinters().then(function(impresoras){
+		var lista = document.getElementById('impresoras_disponibles');
+		lista.innerHTML = '';
+		for(var i = 0; i < impresoras.length; i++){
+			var impresora = impresoras[i];
+			if(typeof impresora === 'object'){
+				impresora = impresora.name || impresora.printerName || impresora.nombre;
+			}
+			if(impresora){
+				var opcion = document.createElement('option');
+				opcion.value = impresora;
+				lista.appendChild(opcion);
+			}
+		}
+	}).catch(function(error){
+		console.warn('No se pudieron cargar las impresoras:', error.message);
+	});
+}
+
+$(function(){
+	$('#ConfiguracionGeneral, #NuevaCategoria, #EditaCategoria').on('shown.bs.modal', cargarImpresorasDisponibles);
+});
 </script>

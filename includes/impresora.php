@@ -12,6 +12,7 @@ $impresora_sd = $datos_config['impresora_sd'];
 $impresora_sd_para_llevar = $datos_config['impresora_sd_para_llevar'];
 $impresora_cuentas = $datos_config['impresora_cuentas'];
 $impresora_cuentas_para_llevar = $datos_config['impresora_cuentas_para_llevar'];
+$impresora_cobros_para_llevar = $datos_config['impresora_cobros_para_llevar'];
 $impresora_cortes = $datos_config['impresora_cortes'];
 $impresora_cortes_para_llevar = $datos_config['impresora_cortes_para_llevar'];
 $impresora_cobros = $datos_config['impresora_cobros'];
@@ -1288,6 +1289,7 @@ $impresion = array();
     global $comandain;
     global $impresora_cuentas;
     global $impresora_cuentas_para_llevar;
+    global $impresora_cobros_para_llevar;
     global $salto;
 
     if ($tipo == 'venta') {
@@ -2104,6 +2106,7 @@ function imprimir_mesa($id_venta, $tipo, $desc = false)
     global $impresora_cobros;
     global $impresora_cuentas;
     global $impresora_cuentas_para_llevar;
+    global $impresora_cobros_para_llevar;
     global $salto;
     
 global $conexion;
@@ -2143,11 +2146,11 @@ $monto_transferencia = normaliza_monto_impresora($ve['monto_transferencia']);
     $domicilio = $ve['domicilio'];
     $para_llevar = isset($ve['para_llevar']) ? intval($ve['para_llevar']) : 0;
     $impresora_ticket = $impresora_cuentas;
-    $impresora_cobro_ticket = $impresora_cobros;
+        $impresora_cobro_ticket = $impresora_cobros;
 
     if ($para_llevar == 1) {
         $impresora_ticket = impresora_preferida_para_llevar($impresora_cuentas_para_llevar, $impresora_cuentas);
-        $impresora_cobro_ticket = $impresora_ticket;
+        $impresora_cobro_ticket = impresora_preferida_para_llevar($impresora_cobros_para_llevar, $impresora_cobros);
     }
 
     $var.='$img2 = "logo.jpg";

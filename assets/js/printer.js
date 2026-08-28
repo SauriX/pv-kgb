@@ -257,6 +257,23 @@ class Printer {
         this.addCommand('testPrinter');
     }
 
+    sendPrintList(printList) {
+        if (!printList || typeof printList !== 'object') {
+            return Promise.reject(new Error('Lista de impresión inválida'));
+        }
+        if (!printList.printerName || !Array.isArray(printList.commands)) {
+            return Promise.reject(new Error('La impresión requiere printerName y commands'));
+        }
+
+        this.printerName = printList.printerName;
+        this.printList = {
+            printerName: printList.printerName,
+            commands: printList.commands.slice()
+        };
+
+        return this.printDocument();
+    }
+
     code123(text) {
         this.addCommand('code123', text);
     }
@@ -363,4 +380,10 @@ class Printer {
 }
 
 
-module.exports = Printer;
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Printer;
+}
+
+if (typeof window !== 'undefined') {
+    window.Printer = Printer;
+}
