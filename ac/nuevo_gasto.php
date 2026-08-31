@@ -20,9 +20,8 @@ $gastos_descripcion=limpiaStr($gastos_descripcion,1,1);
 	
 	if($q){
 		$id_gasto=mysql_insert_id();
-		$var=imprimir_gasto($id_gasto);
-		//gastos_imprimir();
-		echo $var;
+		header('X-PV-Gasto: '.$id_gasto);
+		echo '1';
 	}else{
 		echo "2|Ocurrió un error, intente más tarde.";
 	}

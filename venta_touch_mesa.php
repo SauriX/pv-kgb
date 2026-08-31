@@ -252,21 +252,9 @@ function eliminar_detalle(id){
 
 	function imprimir(id){
 
-		$.post('includes/reimprimir_comanda.php','id_venta='+id,function(data) {
-			var datas = data.split('|');
-			if(datas[0]==1){
-				location.reload();
-			}else{
-				
-				if(!isNaN(datas[0])){
-					console.log(data);
-					pagar(datas[0]);
-				}else{
-					alert(data);
-					location.reload();
-				}
-			}
-		});
+		Printer.imprimirComandas(id, true)
+			.then(function(){ location.reload(); })
+			.catch(function(error){ alert(error.message); });
 
 	}
 

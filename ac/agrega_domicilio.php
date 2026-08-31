@@ -2,7 +2,7 @@
 	include("../includes/session.php");
 	include("../includes/db.php");
 	include("../includes/funciones.php");
-	include("../includes/impresora.php");
+	include("../includes/impresora_plugin.php");
 	extract($_POST);
 	if($id_domicilio_direccion!=0){
 		//Aqui selecciono una dirección entonces solo la updateamos(por si hizo algún cambio) y la imprimimos
@@ -22,7 +22,7 @@
 			$dat = mysql_fetch_assoc($qq);
 			$nombre = $dat['nombre'];
 			$numero = $dat['numero'];
-			imprimir_domicilio($nombre,$numero,$direccion);
+			header('X-PV-Domicilio: '.impresion_plugin_encabezado_domicilio($nombre, $numero, $direccion));
 			exit("1");
 		}else{
 			exit("Ocurrió un error al actualizar la dirección seleccionada.");
@@ -57,7 +57,7 @@
 			$dat = mysql_fetch_assoc($qq);
 			$nombre = $dat['nombre'];
 			$numero = $dat['numero'];
-			imprimir_domicilio($nombre,$numero,$direccion);
+			header('X-PV-Domicilio: '.impresion_plugin_encabezado_domicilio($nombre, $numero, $direccion));
 			echo "1";
 		}else{
 			echo "Ocurrió un error, intente más tarde.";
@@ -94,7 +94,7 @@
 				$dat = mysql_fetch_assoc($qq);
 				$nombre = $dat['nombre'];
 				$numero = $dat['numero'];
-				imprimir_domicilio($nombre,$numero,$direccion);				
+				header('X-PV-Domicilio: '.impresion_plugin_encabezado_domicilio($nombre, $numero, $direccion));
 				echo "1";
 			}else{
 				echo "Ocurrió un error al insertar la dirección, intente más tarde.";

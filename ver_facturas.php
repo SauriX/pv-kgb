@@ -304,10 +304,7 @@ $n1 = mysql_num_rows($q);
 				}
 
 				function ticket_factura(id_factura){
-					//alert(xml);
-					$.post('includes/ticket_factura_Nuevo.php', { id_factura: ""+id_factura+"" },function(data){
-						//alert(data);
-					});
+					Printer.imprimirFactura(id_factura).catch(function(error){ alert(error.message); });
 				}
 
 				function regenerar_factura(rfc,uuid){

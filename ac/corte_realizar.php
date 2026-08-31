@@ -183,7 +183,7 @@ $pu = array();
        $fecha_corte = $fecha." ".$hora;
 	  global $autoprint;
 	  $autoprint = true;
-	  imprimir_corte($id_corte);
+	  header('X-PV-Corte: '.$id_corte);
 	   $cliente = curl_init();
 	   curl_setopt($cliente, CURLOPT_URL, "http://localhost/vendefacil_restaurante/ac/realiza_backup.php");
 	   curl_setopt($cliente, CURLOPT_HEADER, 0);

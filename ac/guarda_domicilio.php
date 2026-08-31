@@ -106,9 +106,6 @@ if(!$vxe){
 
     	}
     }
-    imprimir_comandas('domicilio',$id_venta_domicilio);
-    imprimir_ticket_domicilio($id_venta_domicilio);
-
 if($error==false){
 	mysql_query("COMMIT");
     if($vxe){
@@ -116,7 +113,7 @@ if($error==false){
         $nombre_cliente = str_replace(" ","-",$nombre_cliente);
         agregar_a_venta($id_venta_domicilio,$nombre_cliente);
     }
-	echo "1";
+    echo "1|$id_venta_domicilio";
 }else{
 	mysql_query("ROLLBACK");
 	echo "Hubo problema, por favor intenta de nuevo";

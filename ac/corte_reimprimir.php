@@ -140,7 +140,7 @@
 		}
 		global $autoprint;
 		$autoprint = true;
-		imprimir_corte($id_corte,1);
+		header('X-PV-Corte: '.$id_corte);
 		echo '1';
 
 

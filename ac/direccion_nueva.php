@@ -2,7 +2,7 @@
 include("../includes/session.php");
 include("../includes/db.php");
 include("../includes/funciones.php");
-include("../includes/impresora.php");
+include("../includes/impresora_plugin.php");
 
 extract($_POST);
 
@@ -32,7 +32,7 @@ if($id_domicilio){
 	
 	if(mysql_query($sql)){
 		
-		imprimir_domicilio($nombre,$numero,$direccion);
+		header('X-PV-Domicilio: '.impresion_plugin_encabezado_domicilio($nombre, $numero, $direccion));
 		$sql = "INSERT INTO impresion_domicilio (numero,nombre,direccion,fecha_hora)VALUES('$numero','$id_domicilio','$direccion','$fechahora')";
 		$q = mysql_query($sql);	
 		

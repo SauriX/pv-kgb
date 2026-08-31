@@ -274,6 +274,199 @@ class Printer {
         return this.printDocument();
     }
 
+    static pluginEndpoint() {
+        if (typeof window === 'undefined' || !window.document) {
+            return 'ac/imprimir_comanda_plugin.php';
+        }
+        const script = window.document.querySelector('script[src*="printer.js"]');
+        if (!script || !script.src) {
+            return 'ac/imprimir_comanda_plugin.php';
+        }
+        return new URL('../../ac/imprimir_comanda_plugin.php', script.src).toString();
+    }
+
+    static imprimirComandas(idVenta, reimprimir = false, tipo = 'venta') {
+        const endpoint = Printer.pluginEndpoint();
+        const request = (params) => fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(params)
+        }).then((response) => response.json());
+
+        const preparar = reimprimir
+            ? request({ id_venta: idVenta, reimprimir: '1', tipo: tipo })
+            : Promise.resolve();
+
+        return preparar.then(() => request({ id_venta: idVenta, listar_impresoras: '1', tipo: tipo }))
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(response.error || 'No se pudieron consultar las impresoras');
+                }
+                if (!Array.isArray(response.printers) || response.printers.length === 0) {
+                    throw new Error('No hay impresoras configuradas para la comanda');
+                }
+                return Promise.all(response.printers.map((printerName) => request({
+                    id_venta: idVenta,
+                    impresora: printerName,
+                    tipo: tipo
+                }).then((printResponse) => {
+                    if (!printResponse.ok) {
+                        throw new Error(printResponse.error || 'No se pudo generar la comanda');
+                    }
+                    return new Printer(printResponse.printList.printerName).sendPrintList(printResponse.printList);
+                })));
+            })
+            .then(() => request({ id_venta: idVenta, marcar_impresa: '1', tipo: tipo }))
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(response.error || 'No se pudo marcar la comanda como impresa');
+                }
+                return response;
+            });
+    }
+
+    static imprimirTicketMesa(idVenta, tipo = 'cobrar') {
+        return fetch(Printer.pluginEndpoint(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ id_venta: idVenta, ticket_mesa: '1', tipo_ticket: tipo })
+        })
+            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(response.error || 'No se pudo generar el ticket');
+                }
+                return new Printer(response.printList.printerName).sendPrintList(response.printList);
+            });
+    }
+
+    static imprimirTicketDomicilio(idVenta, impresora = '') {
+        return fetch(Printer.pluginEndpoint(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ id_venta: idVenta, impresora: impresora, ticket_domicilio: '1' })
+        })
+            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(response.error || 'No se pudo generar el ticket de domicilio');
+                }
+                return new Printer(response.printList.printerName).sendPrintList(response.printList);
+            });
+    }
+
+    static imprimirCorte(idCorte) {
+        return fetch(Printer.pluginEndpoint(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ id_venta: idCorte, corte: '1' })
+        })
+            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(response.error || 'No se pudo generar el corte');
+                }
+                return new Printer(response.printList.printerName).sendPrintList(response.printList);
+            });
+    }
+
+    static imprimirGasto(idGasto) {
+        return fetch(Printer.pluginEndpoint(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ id_venta: idGasto, gasto: '1' })
+        })
+            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(response.error || 'No se pudo generar el ticket de gasto');
+                }
+                return new Printer(response.printList.printerName).sendPrintList(response.printList);
+            });
+    }
+
+    static imprimirFactura(idFactura) {
+        return fetch(Printer.pluginEndpoint(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ id_venta: idFactura, factura: '1' })
+        })
+            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(response.error || 'No se pudo generar el ticket de factura');
+                }
+                return new Printer(response.printList.printerName).sendPrintList(response.printList);
+            });
+    }
+
+    static imprimirComprobanteDomicilio(datos) {
+        return fetch(Printer.pluginEndpoint(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                comprobante_domicilio: '1',
+                nombre: datos.nombre,
+                telefono: datos.telefono,
+                direccion: datos.direccion
+            })
+        })
+            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(response.error || 'No se pudo generar el comprobante de domicilio');
+                }
+                return new Printer(response.printList.printerName).sendPrintList(response.printList);
+            });
+    }
+
+    static imprimirCodigo(datos) {
+        return fetch(Printer.pluginEndpoint(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                codigo: '1',
+                codigo_valor: datos.codigo,
+                monto: datos.monto,
+                metodo: datos.metodo,
+                cuenta: datos.cuenta
+            })
+        })
+            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(response.error || 'No se pudo generar el ticket de código');
+                }
+                return new Printer(response.printList.printerName).sendPrintList(response.printList);
+            });
+    }
+
+    static imprimirWifi(password) {
+        return fetch(Printer.pluginEndpoint(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ wifi: '1', password: password })
+        })
+            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(response.error || 'No se pudo generar el ticket Wi-Fi');
+                }
+                return new Printer(response.printList.printerName).sendPrintList(response.printList);
+            })
+            .then(() => fetch('ac/imprimir_wifi.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ confirmar: '1', password: password })
+            }))
+            .then((response) => response.text())
+            .then((response) => {
+                if (response.trim() !== '1') {
+                    throw new Error(response || 'No se pudo registrar la contraseña Wi-Fi');
+                }
+            });
+    }
+
     code123(text) {
         this.addCommand('code123', text);
     }
@@ -386,4 +579,33 @@ if (typeof module !== 'undefined' && module.exports) {
 
 if (typeof window !== 'undefined') {
     window.Printer = Printer;
+
+    if (window.jQuery) {
+        window.jQuery(document).ajaxSuccess((event, xhr, settings, data) => {
+            if (!settings.url.match(/ac\/(cerrar_mesa|cobrar|nuevo_gasto|editar_gasto|agrega_domicilio|direccion_existe|direccion_nueva|reimprimir|genera_codigo|imprimir_wifi)\.php/)) {
+                return;
+            }
+            const ticket = xhr.getResponseHeader('X-PV-Ticket');
+            if (ticket) {
+                const response = ticket.split('|');
+                Printer.imprimirTicketMesa(response[0], response[1]).catch((error) => console.error(error));
+            }
+            const gasto = xhr.getResponseHeader('X-PV-Gasto');
+            if (gasto) {
+                Printer.imprimirGasto(gasto).catch((error) => console.error(error));
+            }
+            const domicilio = xhr.getResponseHeader('X-PV-Domicilio');
+            if (domicilio) {
+                Printer.imprimirComprobanteDomicilio(JSON.parse(decodeURIComponent(domicilio))).catch((error) => console.error(error));
+            }
+            const codigo = xhr.getResponseHeader('X-PV-Codigo');
+            if (codigo) {
+                Printer.imprimirCodigo(JSON.parse(decodeURIComponent(codigo))).catch((error) => console.error(error));
+            }
+            const wifi = xhr.getResponseHeader('X-PV-Wifi');
+            if (wifi) {
+                Printer.imprimirWifi(decodeURIComponent(wifi)).catch((error) => console.error(error));
+            }
+        });
+    }
 }

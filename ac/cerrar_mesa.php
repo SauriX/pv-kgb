@@ -30,8 +30,9 @@
 			$q = mysql_query($sql,$conexion);
 		}
 	}
-imprimir_mesa($id_venta,'cerrar');
-if(!$sin_imprimir){
-	imprimir_mesa($id_venta,'cerrar');
+if($sin_imprimir){
+	echo '1';
+}else{
+	header('X-PV-Ticket: '.$id_venta.'|cerrar');
+	echo '1';
 }
-echo '1';

@@ -114,10 +114,20 @@ function reporte(id_corte){
 
 function imprimeCorte(id_corte){
 
-	$.post('ac/corte_reimprimir.php','id_corte='+id_corte,function(data) {
+	$.post('ac/corte_reimprimir.php','id_corte='+id_corte,function(data, textStatus, xhr) {
 
 		if(data==1){
-			alert('Corte reimpreso');
+			var corte = xhr.getResponseHeader('X-PV-Corte') || id_corte;
+			if(corte && window.Printer && typeof Printer.imprimirCorte === 'function'){
+				Printer.imprimirCorte(corte)
+					.then(function(){ alert('Corte reimpreso'); })
+					.catch(function(error){
+						console.error(error);
+						alert('Corte reimpreso');
+					});
+			}else{
+				alert('Corte reimpreso');
+			}
 		}else{
 			alert('Error al imprimir el corte. '+data);
 		}

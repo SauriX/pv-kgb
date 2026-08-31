@@ -3,7 +3,7 @@
 include('../includes/session.php');
 include('../includes/db.php');
 include('../includes/funciones.php');
-include('../includes/impresora.php');
+include('../includes/impresora_plugin.php');
 
 
 extract($_POST);
@@ -72,7 +72,12 @@ function obtenCodigo($MONTO,$METODO,$NUMCTA){
     	break;            
 	}
 	
-	imprimir_codigo($contents,$MONTO,$metodo_ok,$NUMCTA);
+    header('X-PV-Codigo: '.rawurlencode(json_encode(array(
+        'codigo' => trim($contents),
+        'monto' => $MONTO,
+        'metodo' => $metodo_ok,
+        'cuenta' => $NUMCTA
+    ))));
 	    
     if($returnInfo) {
         $info = curl_getinfo($ch);

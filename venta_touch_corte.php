@@ -90,10 +90,21 @@ $(function(){
 			$('#loader_corte').show();
 			$('#imagen_loader_corte').attr('src','img/load-verde.gif').show();
 			$('#mensaje_loader_corte').html('Realizando Corte de Caja..');
-			$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data) {
+			$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data, textStatus, xhr) {
 				if(data==1){
-					$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
-					$('#mensaje_loader_corte').html('Listo.<br/><br/><button onclick="location.reload();" type="button" class="btn btn-default btn_ac btn-md">Terminar</button>');
+					var terminarCorte = function(){
+						$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
+						$('#mensaje_loader_corte').html('Listo.<br/><br/><button onclick="location.reload();" type="button" class="btn btn-default btn_ac btn-md">Terminar</button>');
+					};
+					var corte = xhr.getResponseHeader('X-PV-Corte');
+					if(corte && window.Printer && typeof Printer.imprimirCorte === 'function'){
+						Printer.imprimirCorte(corte).then(terminarCorte).catch(function(error){
+							console.error(error);
+							terminarCorte();
+						});
+					}else{
+						terminarCorte();
+					}
 
 				}else if(data=='NOSESSION'){
 					alert('Su sesión ha expirado, por favor reingrese nuevamente.');

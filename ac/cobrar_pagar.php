@@ -187,13 +187,10 @@ if(!$query){
 
 		mysql_query("COMMIT");
 
-		if($check_imprimir == 'false'){
-			$var = imprimir_mesa($id_venta_cobrar,'cobrar',$cliente,$numero);
-		}else{
-			abrir_caja();
+		if($check_imprimir !== 'true'){
+			header('X-PV-Ticket: '.$id_venta_cobrar.'|cobrar');
 		}
-
-		echo '1|'.$var;
+		echo '1|';
 
 	}else{
 		mysql_query("ROLLBACK");

@@ -114,11 +114,8 @@ $(function() {
 	}
 
 	function imprimir(id){
-		
-		$.post('includes/reimprimir_comanda.php','id_venta='+id,function(data) {
-			if(data!=1){
-				alert(data);
-			}
+		Printer.imprimirComandas(id, true).catch(function(error) {
+			alert(error.message);
 		});
 		
 	}

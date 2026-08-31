@@ -232,21 +232,7 @@ if($error==false){
 
 
 	if($mesa_cerrada_imprimir){
-		
-	
-		imprimir_mesa($id_venta,'cerrar');
-
-
-		imprimir_comandas('venta',$id_venta);
-
-		 $up_coman="UPDATE venta_detalle SET impreso=1 WHERE id_venta=$id_venta";
-		 mysql_query($up_coman);
 	}else {
-			
-		imprimir_comandas('venta',$id_venta);
-		$up_coman="UPDATE venta_detalle SET impreso=1 WHERE id_venta=$id_venta";
-		mysql_query($up_coman);
-
 	}
 
 	mysql_query("COMMIT");
@@ -283,10 +269,13 @@ $id_producto4=$datos3['id'];
 }
 	//fion de updatear ingrediente
      
-    if($auto_cobro==1 or !$numero_mesa  ){
-	echo $id_venta;
+	if($mesa_cerrada_imprimir){
+		header('X-PV-Ticket: '.$id_venta.'|cerrar');
+	}
+	if($auto_cobro==1 or !$numero_mesa){
+		echo $id_venta;
 	}else{
-		echo "1";
+		echo "1|".$id_venta;
 	}
 }else{
 	mysql_query("ROLLBACK");

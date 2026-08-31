@@ -73,6 +73,14 @@ if (function_exists('mysql_connect')) {
         }
     }
 
+    if (!function_exists('mysql_affected_rows')) {
+        function mysql_affected_rows($link_identifier = null){
+            global $conexion;
+            $conn = $link_identifier ? $link_identifier : $conexion;
+            return mysqli_affected_rows($conn);
+        }
+    }
+
     if (!function_exists('mysql_result')) {
         function mysql_result($result, $row = 0, $field = 0){
             if (!$result) {

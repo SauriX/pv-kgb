@@ -532,10 +532,21 @@ $( "#cerrador" ).click(function() {
 			$('#loader_corte').show();
 			$('#imagen_loader_corte').attr('src','img/load-verde.gif').show();
 			$('#mensaje_loader_corte').html('Realizando Corte de Caja..');
-				$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data) {
+				$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data, textStatus, xhr) {
 				if(data==1){
-					$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
-					$('#mensaje_loader_corte').html('Listo.<br/><br/><button onclick="location.reload();" type="button" class="btn btn-default btn_ac btn-md">Terminar</button>');
+					var terminarCorte = function(){
+						$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
+						$('#mensaje_loader_corte').html('Listo.<br/><br/><button onclick="location.reload();" type="button" class="btn btn-default btn_ac btn-md">Terminar</button>');
+					};
+					var corte = xhr.getResponseHeader('X-PV-Corte');
+					if(corte && window.Printer && typeof Printer.imprimirCorte === 'function'){
+						Printer.imprimirCorte(corte).then(terminarCorte).catch(function(error){
+							console.error(error);
+							terminarCorte();
+						});
+					}else{
+						terminarCorte();
+					}
 
 				}else if(data=='NOSESSION'){
 					alert('Su sesión ha expirado, por favor reingrese nuevamente.');
@@ -861,8 +872,15 @@ function guardatemp(){
 		var datos = $('#venta_form').serialize()+'&numero_mesa='+numero_mesa ;
 
 		$.post('ac/cobrar.php',datos,function(data) {
+				var respuesta = data.split('|');
 
-				if(data==1){
+				if(respuesta[0]==1){
+					Printer.imprimirComandas(respuesta[1])
+						.then(function(){ cobradoExito(); })
+						.catch(function(error){
+							console.error(error);
+							cobradoExito();
+						});
 
 
 				}else{
@@ -925,10 +943,24 @@ function cobrar_cuenta(){
 
 			$('#cobrar_final').html('Cobrando...');
 			$('#cobrar_final').attr('disabled', 'true');
-			$.post('ac/cobrar_pagar.php',datos+'&pagarOriginal='+pagarOriginal,function(data) {
+			$.post('ac/cobrar_pagar.php',datos+'&pagarOriginal='+pagarOriginal,function(data, textStatus, xhr) {
 				console.log(data);
-				if(data==1){
-					window.location  = 'index.php';
+				if($.trim(data).split('|')[0]==1){
+					var ticket = xhr.getResponseHeader('X-PV-Ticket');
+					var continuar = function(){
+						window.location  = 'index.php';
+					};
+					if(ticket && window.Printer && typeof Printer.imprimirTicketMesa === 'function'){
+						var response = ticket.split('|');
+						Printer.imprimirTicketMesa(response[0], response[1])
+							.then(continuar)
+							.catch(function(error){
+								console.error(error);
+								continuar();
+							});
+					}else{
+						continuar();
+					}
 				}else{
 
 					$('#cobrar_final').attr('disabled', 'false');
@@ -1630,25 +1662,46 @@ function cobrar(){
 		var datos = $('#venta_form').serialize()+'&numero_mesa='+numero_mesa+'&cobro='+auto_cobro+'&domicilio='+domicilio;
 	
 		$.post('ac/cobrar.php',datos,function(data){
+			var datas = data.split('|');
 			console.log(data);
     	<?if($auto_cobro==1){?>
-			if(data==1){
-			cobradoExito();
+				if(datas[0]==1){
+				Printer.imprimirComandas(datas[1])
+					.then(function(){ cobradoExito(); })
+					.catch(function(error){
+						console.error(error);
+						cobradoExito();
+					});
 			}else{
-				if(!isNaN(data)){
+					if(!isNaN(datas[0])){
 					console.log(data);
-					pagar(data);
+						Printer.imprimirComandas(datas[0])
+							.then(function(){ pagar(datas[0]); })
+							.catch(function(error){
+								console.error(error);
+								pagar(datas[0]);
+							});
 				}else{
 					alert(data);
 					cobradoExito();
 				}
 			} 
 		<?}else{?>
-			if(data==1){
-				cobradoExito();
+			if(datas[0]==1){
+			Printer.imprimirComandas(datas[1])
+				.then(function(){ cobradoExito(); })
+				.catch(function(error){
+					console.error(error);
+					cobradoExito();
+				});
 			}else{
-				if(!isNaN(data)){
-					pagar(data);
+				if(!isNaN(datas[0])){
+					Printer.imprimirComandas(datas[0])
+						.then(function(){ pagar(datas[0]); })
+						.catch(function(error){
+							console.error(error);
+							pagar(datas[0]);
+						});
 				}else{
 					alert(data);
 					cobradoExito();

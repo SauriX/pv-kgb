@@ -461,13 +461,27 @@ function cobrar(){
 		if(yo=='Confirmar Cobro'){
 
 			$('#cobrar_final').html('Cobrando...');
-			$.post('ac/cobrar_pagar.php',datos,function(data) {
+			$.post('ac/cobrar_pagar.php',datos,function(data, textStatus, xhr) {
 				console.log(datos);
 				data = $.trim(data);
 				var datas = data.split('|');
 
 				if(datas[0]==1){
-					window.location  = 'index.php?Modulo=VentaTouch';
+					var ticket = xhr.getResponseHeader('X-PV-Ticket');
+					var continuar = function(){
+						window.location  = 'index.php?Modulo=VentaTouch';
+					};
+					if(ticket && window.Printer && typeof Printer.imprimirTicketMesa === 'function'){
+						var response = ticket.split('|');
+						Printer.imprimirTicketMesa(response[0], response[1])
+							.then(continuar)
+							.catch(function(error){
+								console.error(error);
+								continuar();
+							});
+					}else{
+						continuar();
+					}
 				}else{
 					console.log(data);
 					alert('Error: '+data);

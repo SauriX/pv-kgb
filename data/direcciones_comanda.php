@@ -353,8 +353,13 @@ function cargaDomicilio(){
     var datos = datos_venta+"&"+datos_envio;
     $.post('ac/guarda_domicilio.php',datos,function(data) {
         console.log(data);
-        if(data==1){
-            location.reload();
+        var respuesta = data.split('|');
+        if(respuesta[0]==1){
+            Promise.all([
+                Printer.imprimirComandas(respuesta[1], false, 'domicilio'),
+                Printer.imprimirTicketDomicilio(respuesta[1])
+            ]).then(function(){ location.reload(); })
+                .catch(function(error){ alert('La venta se guardó, pero no se pudo imprimir la comanda: ' + error.message); location.reload(); });
         }else{
             alert('Error: '+data);
             $('#btn-cargaDomicilio').button('reset');

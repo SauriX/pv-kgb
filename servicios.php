@@ -771,7 +771,7 @@ $(function(){
 });
 
 function reimprimir_ticket_venta(id,impresora){
-	$.get('ac/reimprimir_ticket_venta.php',{ id:id, impresora:impresora });
+	Printer.imprimirTicketDomicilio(id, impresora).catch(function(error){ alert(error.message); });
 }
 
 function reimprimir_salida(id,impresora){

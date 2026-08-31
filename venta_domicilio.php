@@ -535,10 +535,21 @@ $( "#cerrador" ).click(function() {
 			$('#loader_corte').show();
 			$('#imagen_loader_corte').attr('src','img/load-verde.gif').show();
 			$('#mensaje_loader_corte').html('Realizando Corte de Caja..');
-			$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data) {
+			$.get('ac/corte_realizar.php', { efectivoCa: efectivo, tpvEfec: tpv, otrosMet:0 } ,function(data, textStatus, xhr) {
 				console.log(data);
-				$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
+				var terminarCorte = function(){
+					$('#imagen_loader_corte').css('-webkit-filter','hue-rotate(40deg)').attr('src','img/ok.png').show();
 					$('#mensaje_loader_corte').html('Listo.<br/><br/><button onclick="location.reload();" type="button" class="btn btn-default btn_ac btn-md">Terminar</button>');
+				};
+				var corte = xhr.getResponseHeader('X-PV-Corte');
+				if(data==1 && corte && window.Printer && typeof Printer.imprimirCorte === 'function'){
+					Printer.imprimirCorte(corte).then(terminarCorte).catch(function(error){
+						console.error(error);
+						terminarCorte();
+					});
+				}else{
+					terminarCorte();
+				}
 				/* if(data==1){
 	
 
@@ -849,7 +860,12 @@ function guardatemp(){
 		$.post('ac/cobrar.php',datos,function(data) {
 				var datas = data.split('|');
 				if(datas[0]==1){
-console.log('Error: '+ data);
+					Printer.imprimirComandas(datas[1])
+						.then(function(){ cobradoExito(); })
+						.catch(function(error){
+							console.error(error);
+							cobradoExito();
+						});
 				}else{
 					$('.hidden_loader').show();
 					$('#loader').hide();
@@ -911,11 +927,25 @@ function cobrar_cuenta(){
 
 			$('#cobrar_final').html('Cobrando...');
 			$('#cobrar_final').attr('disabled', 'true');
-			$.post('ac/cobrar_pagar.php',datos+'&pagarOriginal='+pagarOriginal,function(data) {
+			$.post('ac/cobrar_pagar.php',datos+'&pagarOriginal='+pagarOriginal,function(data, textStatus, xhr) {
 				console.log(data);
 				var datas = data.split('|');
 				if(datas[0]==1){
-					window.location  = 'index.php';
+					var ticket = xhr.getResponseHeader('X-PV-Ticket');
+					var continuar = function(){
+						window.location  = 'index.php';
+					};
+					if(ticket && window.Printer && typeof Printer.imprimirTicketMesa === 'function'){
+						var response = ticket.split('|');
+						Printer.imprimirTicketMesa(response[0], response[1])
+							.then(continuar)
+							.catch(function(error){
+								console.error(error);
+								continuar();
+							});
+					}else{
+						continuar();
+					}
 				}else{
 
 					$('#cobrar_final').attr('disabled', 'false');
@@ -1649,12 +1679,22 @@ function cobrar(){
 			console.log(data);
     	<?if($auto_cobro==1){?>
 			if(datas[0]==1){
-			cobradoExito();
+			Printer.imprimirComandas(datas[1])
+				.then(function(){ cobradoExito(); })
+				.catch(function(error){
+					console.error(error);
+					cobradoExito();
+				});
 			}else{
 				
 				if(!isNaN(datas[0])){
 					console.log(data);
-					pagar(datas[0]);
+					Printer.imprimirComandas(datas[0])
+						.then(function(){ pagar(datas[0]); })
+						.catch(function(error){
+							console.error(error);
+							pagar(datas[0]);
+						});
 				}else{
 					console.log(data);
 					alert(data);
@@ -1663,10 +1703,20 @@ function cobrar(){
 			} 
 		<?}else{?>
 			if(datas[0]==1){
-				cobradoExito();
+			Printer.imprimirComandas(datas[1])
+				.then(function(){ cobradoExito(); })
+				.catch(function(error){
+					console.error(error);
+					cobradoExito();
+				});
 			}else{
 				if(!isNaN(datas[0])){
-					pagar(datas[0]);
+					Printer.imprimirComandas(datas[0])
+						.then(function(){ pagar(datas[0]); })
+						.catch(function(error){
+							console.error(error);
+							pagar(datas[0]);
+						});
 				}else{
 					alert(data);
 					console.log(data);
@@ -2149,21 +2199,13 @@ if(!$touch){
 
       </div>
       <div class="modal-footer hidden_loader">
-      			<div class="checkbox" style="float: right;" >
-  					<label class="checkbox-inline"><input type="checkbox" name="radio" id="radio" <?if($auto_cobro==1){echo('checked');}?>>Cobro directo</label>
-				</div>
-				<div class="checkbox" style="float: right;" >
-  				<label class="checkbox-inline"><input type="checkbox" name="domicilio" id="domicilio" >Domicilio</label>
-				</div>
-	  <div class="col-md-12">
-	    <div class="col-md-6">
-    	    <button type="button" class="btn btn-default btn_ac btn-lg" data-dismiss="modal">Cancelar</button>
-	    </div>
-	    <div class="col-md-6 text-right">
-
-	        <a href="#" role="button" class="btn btn-primary btn_ac btn-lg" id="cobrar1" onclick="javascript:cobrar();"  >Cargar</a>
-	    </div>
-		</div>
+			<div class="text-center" style="margin-bottom: 15px;">
+				<label class="checkbox-inline"><input type="checkbox" name="domicilio" id="domicilio"> Domicilio</label>
+				<label class="checkbox-inline"><input type="checkbox" name="radio" id="radio" <?if($auto_cobro==1){echo('checked');}?>> Cobro directo</label>
+			</div>
+			<button type="button" class="btn btn-default btn_ac btn-lg pull-left" data-dismiss="modal">Cancelar</button>
+			<a href="#" role="button" class="btn btn-primary btn_ac btn-lg pull-right" id="cobrar1" onclick="javascript:cobrar();">Cargar</a>
+			<div class="clearfix"></div>
       </div>
 
     </div><!-- /.modal-content -->

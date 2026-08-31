@@ -1,12 +1,12 @@
-<?
+<?php
 include("../includes/session.php");
 include("../includes/db.php");
 include("../includes/funciones.php");
-include("../includes/impresora.php");
 
-extract($_GET);
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-if(!$id) exit("No llegó ningún identificador.");
-if(!$impresora) exit("No llegó ninguna impresora.");
-
-imprimir_ticket_domicilio($id,$impresora);
+header('Content-Type: application/json; charset=utf-8');
+echo json_encode(array(
+	'ok' => false,
+	'error' => $id > 0 ? 'usar_plugin_de_impresion' : 'id_invalido'
+));
