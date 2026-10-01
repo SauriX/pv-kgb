@@ -32,64 +32,11 @@ $valida=mysql_num_rows($q);
 
 
 /********************************************/
-/*	ALGORITMO PARA ACTUALIZAR LOS PRODUCTOS */
+/*	ACTUALIZA LISTA DE PRODUCTOS (sin refresh) */
 /********************************************/
-$r_sql = "SELECT*FROM refresh";
-$r_q = mysql_query($r_sql);
-$r_ft = mysql_fetch_assoc($r_q);
-
-$r_productos = $r_ft['r_productos'];
-$r_venta = $r_ft['r_venta'];
-
-if($r_productos!=$r_venta){
-
-	$sql="SELECT productos.* FROM productos
-	WHERE productos.activo=1
-	ORDER BY productos.id_categoria";
-
-	$q = mysql_query($sql);
-	$cuantos = mysql_num_rows($q);
-	$strt = 1;
-
-	while($ft = mysql_fetch_assoc($q)){
-		$codigo = $ft['codigo'];
-		$nombre = acentos($ft['nombre']);
-		$precio = $ft['precio_venta'];
-		$id_producto = $ft['id_producto'];
-		$cont.= "\"$nombre\" : { codigo: \"$codigo\", precio: \"$precio\", id_producto: \"$id_producto\" }";
-		if($strt<$cuantos){
-			$coma = ",";
-		}else{
-			$coma = "";
-		}
-		$cont.=$coma;
- 		$strt++;
- 	}
-
-	$handle = fopen("lista_productos.php","w");
-
-	$inicio = "\n
-/********************************************/
-/**   VENDEFACIL 2.0 | LISTA DE PRODUCTOS  **/
-/********************************************/
-/* Ultima actualizacion: ".date("Y-m-d H:i:s")."*/
-/********************************************/
-\n";
-	$final = "\n
-/********************************************/
-/**       TERMINA LISTA DE PRODUCTOS       **/
-/********************************************/
-\n";
-
- 	$cont.= $final;
-	fputs($handle,$inicio);
-	fputs($handle,$cont);
-	fclose($handle);
-	mysql_query("UPDATE refresh SET r_venta='$r_productos'");
-}
+actualizar_lista_productos();
 /********************************************/
 /*					FIN						*/
-/*	ALGORITMO PARA ACTUALIZAR LOS PRODUCTOS */
 /********************************************/
 ?>
 <script>

@@ -124,72 +124,15 @@ if($touch_get=='yes'){
 }
 
 /********************************************/
-/*	ALGORITMO PARA ACTUALIZAR LOS PRODUCTOS */
+/*	ACTUALIZA LISTA DE PRODUCTOS (sin refresh) */
 /********************************************/
-$r_sql = "SELECT*FROM refresh";
-$r_q = mysql_query($r_sql);
-$r_ft = mysql_fetch_assoc($r_q);
-$r_productos = $r_ft['r_productos'];
-$r_venta = $r_ft['r_venta'];
-
+actualizar_lista_productos();
 $sql_productos = "SELECT productos.* FROM productos
 LEFT JOIN categorias ON categorias.id_categoria = productos.id_categoria
 WHERE productos.activo=1
 ORDER BY productos.id_categoria ASC, productos.precio_venta ASC";
-
-
-
-
-if($r_productos!=$r_venta){
-
-	$q = mysql_query($sql_productos);
-	$cuantos = mysql_num_rows($q);
-	$strt = 1;
-
-
-
-	while($ft = mysql_fetch_assoc($q)){
-		$codigo = trim($ft['codigo']);
-		$nombre = acentos($ft['nombre']);
-		$precio = $ft['precio_venta'];
-		$id_producto = $ft['id_producto'];
-		$impresora = $ft['impresora'];
-		$impresora = (!$impresora) ? 'NULL' : $impresora;
-        //New
-		$cont.= "\"$nombre\" : { codigo: \"$codigo\", precio: \"$precio\", id_producto: \"$id_producto\", impresora: \"$impresora\" }";
-		if($strt<$cuantos){
-			$coma = ",";
-		}else{
-			$coma = "";
-		}
-		$cont.=$coma;
- 		$strt++;
- 	}
-
-	$handle = fopen("lista_productos.php","w");
-
-	$inicio = "\n
-/********************************************/
-/**   VENDEFACIL 2.0 | LISTA DE PRODUCTOS  **/
-/********************************************/
-/* Ultima actualizacion: ".date("Y-m-d H:i:s")."*/
-/********************************************/
-\n";
-	$final = "\n
-/********************************************/
-/**       TERMINA LISTA DE PRODUCTOS       **/
-/********************************************/
-\n";
-
- 	$cont.= $final;
-	fputs($handle,$inicio);
-	fputs($handle,$cont);
-	fclose($handle);
-	mysql_query("UPDATE refresh SET r_venta='$r_productos'");
-}
 /********************************************/
 /*					FIN						*/
-/*	ALGORITMO PARA ACTUALIZAR LOS PRODUCTOS */
 /********************************************/
 ?>
 
@@ -855,17 +798,15 @@ function guardatemp(){
 		$('.hidden_loader').hide();
 		$('#loader').show();
 
-		var datos = $('#venta_form').serialize()+'&numero_mesa='+numero_mesa ;
+		var domicilio = $("#domicilio").is(':checked') ? 1 : 0;
+		var datos = $('#venta_form').serialize()+'&numero_mesa='+numero_mesa+'&domicilio='+domicilio;
 
 		$.post('ac/cobrar.php',datos,function(data) {
 				var datas = data.split('|');
 				if(datas[0]==1){
-					Printer.imprimirComandas(datas[1])
-						.then(function(){ cobradoExito(); })
-						.catch(function(error){
-							console.error(error);
-							cobradoExito();
-						});
+					Printer.imprimirComandas(datas[1], false, 'venta')
+						.then(function(){ finalizarCobroDomicilio(); })
+						.catch(function(error){ manejarErrorComanda(error); });
 				}else{
 					$('.hidden_loader').show();
 					$('#loader').hide();
@@ -931,21 +872,10 @@ function cobrar_cuenta(){
 				console.log(data);
 				var datas = data.split('|');
 				if(datas[0]==1){
-					var ticket = xhr.getResponseHeader('X-PV-Ticket');
 					var continuar = function(){
 						window.location  = 'index.php';
 					};
-					if(ticket && window.Printer && typeof Printer.imprimirTicketMesa === 'function'){
-						var response = ticket.split('|');
-						Printer.imprimirTicketMesa(response[0], response[1])
-							.then(continuar)
-							.catch(function(error){
-								console.error(error);
-								continuar();
-							});
-					}else{
-						continuar();
-					}
+					Printer.procesarTicketRespuesta(xhr, continuar, $('#id_venta_cobrar').val(), 'cobrar');
 				}else{
 
 					$('#cobrar_final').attr('disabled', 'false');
@@ -1650,6 +1580,38 @@ function dame_info(codigo){
 	return datos;
 }
 
+function manejarErrorComanda(error, continuar) {
+	var msg = 'No se pudo imprimir la comanda: ' + (error && error.message ? error.message : error);
+	console.error(msg, error);
+	$('.hidden_loader').show();
+	$('#loader').hide();
+	$('#loader_venta3').hide();
+	$('#cobrar1').html('Confirmar').removeClass('btn-primary').addClass('btn-success');
+	if (typeof swal === 'function') {
+		swal('Error de impresion', msg, 'error');
+	} else {
+		alert(msg);
+	}
+	if (typeof continuar === 'function') {
+		continuar();
+	}
+}
+
+function finalizarCobroDomicilio() {
+	if (typeof swal === 'function') {
+		swal({
+			title: 'Venta guardada',
+			text: 'La comanda se envio a imprimir.',
+			type: 'success',
+			timer: 1200,
+			showConfirmButton: false
+		});
+		setTimeout(function(){ cobradoExito(); }, 1300);
+		return;
+	}
+	cobradoExito();
+}
+
 function cobrar(){
 
 
@@ -1677,54 +1639,46 @@ function cobrar(){
 		$.post('ac/cobrar.php',datos,function(data){
 			var datas = data.split('|');
 			console.log(data);
-    	<?if($auto_cobro==1){?>
-			if(datas[0]==1){
-			Printer.imprimirComandas(datas[1])
-				.then(function(){ cobradoExito(); })
-				.catch(function(error){
-					console.error(error);
-					cobradoExito();
-				});
-			}else{
-				
-				if(!isNaN(datas[0])){
-					console.log(data);
-					Printer.imprimirComandas(datas[0])
-						.then(function(){ pagar(datas[0]); })
-						.catch(function(error){
-							console.error(error);
-							pagar(datas[0]);
-						});
+			if(!window.Printer || typeof Printer.imprimirComandas !== 'function'){
+				alert('El módulo de impresión no cargó en esta tableta. Recarga la página.');
+				$('.hidden_loader').show();
+				$('#loader').hide();
+				$('#loader_venta3').hide();
+				if(!isNaN(datas[0]) && datas[0] != 1){
+					pagar(datas[0]);
+				}else if(datas[0]==1){
+					finalizarCobroDomicilio();
 				}else{
-					console.log(data);
-					alert(data);
 					cobradoExito();
 				}
-			} 
-		<?}else{?>
+				return;
+			}
 			if(datas[0]==1){
-			Printer.imprimirComandas(datas[1])
-				.then(function(){ cobradoExito(); })
-				.catch(function(error){
-					console.error(error);
-					cobradoExito();
-				});
-			}else{
-				if(!isNaN(datas[0])){
-					Printer.imprimirComandas(datas[0])
-						.then(function(){ pagar(datas[0]); })
-						.catch(function(error){
-							console.error(error);
-							pagar(datas[0]);
-						});
-				}else{
-					alert(data);
-					console.log(data);
-					cobradoExito();
+				Printer.imprimirComandas(datas[1], false, 'venta')
+					.then(function(){ finalizarCobroDomicilio(); })
+					.catch(function(error){ manejarErrorComanda(error); });
+			}else if(!isNaN(datas[0])){
+				var idVenta = datas[0];
+				var flujo = Printer.imprimirComandas(idVenta, false, 'venta');
+				if(auto_cobro == 1 || !numero_mesa){
+					flujo = flujo.then(function(){
+						return Printer.imprimirTicketMesa(idVenta, 'cerrar');
+					});
 				}
-			}    
-		<?}?>
+				flujo
+					.then(function(){ pagar(idVenta); })
+					.catch(function(error){ manejarErrorComanda(error, function(){ pagar(idVenta); }); });
+			}else{
+				console.log(data);
+				alert(data);
+				cobradoExito();
+			}
 
+		}).fail(function(){
+			alert('No se pudo guardar la venta. Revisa la red.');
+			$('.hidden_loader').show();
+			$('#loader').hide();
+			$('#loader_venta3').hide();
 		});
 	}else{
 		$('#cobrar1').html('Confirmar');

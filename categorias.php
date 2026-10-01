@@ -86,14 +86,14 @@ $msg = isset($_GET['msg']) ? (int) $_GET['msg'] : 0;
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="codigo" class="col-md-3 control-label">Impresora</label>
+				<label for="codigo" class="col-md-3 control-label">Impresora Caja</label>
 				
 				<div class="col-md-9">
 					<input type="text" list="impresoras_disponibles" class="form-control edit impresora-selector" id="nuevo_impresora" name="impresora" autocomplete="off" maxlength="20">
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="codigo" class="col-md-3 control-label">Imp. Para Llevar</label>
+				<label for="codigo" class="col-md-3 control-label">Impresora Barra</label>
 				<div class="col-md-9">
 					<input type="text" list="impresoras_disponibles" class="form-control edit impresora-selector" id="nuevo_impresora_para_llevar" name="impresora_para_llevar" autocomplete="off" maxlength="64">
 				</div>
@@ -136,13 +136,13 @@ $msg = isset($_GET['msg']) ? (int) $_GET['msg'] : 0;
 
 
 			<div class="form-group">
-				<label for="codigo" class="col-md-3 control-label">Impresora</label>
+				<label for="codigo" class="col-md-3 control-label">Impresora Caja</label>
 				<div class="col-md-9">
 					<input type="text" list="impresoras_disponibles" class="form-control edit impresora-selector" id="impresora" name="impresora" autocomplete="off" maxlength="20">
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="codigo" class="col-md-3 control-label">Imp. Para Llevar</label>
+				<label for="codigo" class="col-md-3 control-label">Impresora Barra</label>
 				<div class="col-md-9">
 					<input type="text" list="impresoras_disponibles" class="form-control edit impresora-selector" id="impresora_para_llevar" name="impresora_para_llevar" autocomplete="off" maxlength="64">
 				</div>

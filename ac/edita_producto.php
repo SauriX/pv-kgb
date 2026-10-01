@@ -78,8 +78,7 @@ if($valida>0){
 			$q2=mysql_query($sql2);
 		}
 
-		$hash = md5(time());
-		mysql_query("UPDATE refresh SET r_productos = '$hash'");
+		actualizar_lista_productos();
 		echo 1;		
 	}else{
 		echo "Ocurrió un error, intente más tarde.";

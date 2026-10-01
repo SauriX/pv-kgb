@@ -23,6 +23,11 @@ if(!isset($numero_mesa)) $numero_mesa = '';
 if(!isset($domicilio)) $domicilio = 0;
 if(!isset($cobro)) $cobro = 0;
 if(!isset($para_llevar)) $para_llevar = 0;
+$domicilio = ($domicilio === 'on' || intval($domicilio) === 1) ? 1 : 0;
+$para_llevar = intval($para_llevar);
+if ($domicilio == 1) {
+	$para_llevar = 1;
+}
 $sql="SELECT * FROM configuracion ";
 $q =mysql_query($sql);
 $ft=mysql_fetch_assoc($q);
@@ -52,7 +57,7 @@ if($numero_mesa){
 
 			$id_venta = @mysql_result($q,0);
 			$id_venta2 = $id_venta;
-			mysql_query("UPDATE ventas SET para_llevar='$para_llevar' WHERE id_venta='$id_venta'");
+			mysql_query("UPDATE ventas SET para_llevar='$para_llevar', domicilio='$domicilio' WHERE id_venta='$id_venta'");
 			if(!$id_venta){
 				$error = true;
 				$mensaje = "No se pudo obtener id_venta";

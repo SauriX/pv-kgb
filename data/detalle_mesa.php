@@ -3,7 +3,8 @@ include("../includes/db.php");
 $id_venta=$_GET['id_venta'];
 $sq="SELECT venta_detalle.*, productos.nombre FROM venta_detalle 
 JOIN productos ON productos.id_producto=venta_detalle.id_producto
-WHERE id_venta=$id_venta";
+WHERE id_venta=$id_venta
+ORDER BY venta_detalle.id_detalle ASC";
 $qu=mysql_query($sq);
 $consumo_total=0;
 $valida=mysql_num_rows($qu);
@@ -22,36 +23,40 @@ if($valida){
 	<table class="table table-striped table-hover ">
 	    <thead>
 	        <tr>
-	        	<th width="240">Producto</th>
+	        	<th width="220">Producto</th>
 	        	<th width="70" align="right" style="text-align: right;">Precio</th>
 	        	<th width="30" align="center" style="text-align: center;">Cantidad</th>
-	        	<th width="70" align="right" style="text-align: right;">Precio</th>
-				<th width="40" align="right"></th>
+	        	<th width="70" align="right" style="text-align: right;">Importe</th>
+				<th width="90" align="right"></th>
 	        </tr>
 	    </thead>
-	    <tbody style="font-size: 15px;">
+	    <tbody style="font-size: 15px;" id="detalle_mesa_items">
 		    <? while($dat=mysql_fetch_assoc($qu)){
-			//Sacamos los productos
-	 		$consumo_total+=$dat['cantidad']*$dat['precio_venta'];
+			$tiene_descuento = strpos($dat['comentarios'], '[[DESC100]]') !== false;
+			$consumo_total+=$dat['cantidad']*$dat['precio_venta'];
 	 		?>
-	        <tr id="detalle_<?=$dat['id_detalle']?>">
-	        	<td width="240"><?=$dat['nombre']?></td>
-				<td width="70" align="right"><?=number_format($dat['precio_venta'],2)?></td>
+	        <tr id="detalle_<?=$dat['id_detalle']?>" <? if($tiene_descuento){ ?>style="background-color:#fcf8e3;"<? } ?>>
+	        	<td width="220">
+	        		<?=$dat['nombre']?>
+	        		<span id="m_<?=$dat['id_detalle']?>" class="label label-warning" <? if(!$tiene_descuento){ ?>style="display:none;"<? } ?>>CORTESIA</span>
+	        	</td>
+				<td width="70" align="right" id="u_<?=$dat['id_detalle']?>"><?=number_format($dat['precio_venta'],2)?></td>
 				<td width="30" align="center"><?=$dat['cantidad']?></td>
-				<td width="70" align="right"><?=number_format($dat['cantidad']*$dat['precio_venta'],2)?></td>
-				<td width="40" align="right">
-					<a class="btn btn-default btn-xs" href="#" role="button" onclick="eliminar_detalle(<?=$dat['id_detalle']?>);">
+				<td width="70" align="right" id="p_<?=$dat['id_detalle']?>"><?=number_format($dat['cantidad']*$dat['precio_venta'],2)?></td>
+				<td width="90" align="right">
+					<button type="button" class="btn btn-warning btn-xs" id="d_<?=$dat['id_detalle']?>" onclick="toggle_descuento_detalle(<?=$dat['id_detalle']?>); return false;"><?=$tiene_descuento ? 'Restaurar' : '100%'?></button>
+					<a class="btn btn-default btn-xs" href="#" role="button" onclick="eliminar_detalle(<?=$dat['id_detalle']?>); return false;">
 						<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
 					</a>
 				</td>
 	        </tr>
 	        <? } ?>
 	        <tr>
-	        	<td width="240"></td>
+	        	<td width="220"></td>
 				<td width="70" align="right"></td>
 				<td width="30" align="center"></td>
 				<td width="70" align="right" id="consumo_total_mesa"><b><?=number_format($consumo_total,2)?></b></td>
-				<td width="40" align="right"></td>
+				<td width="90" align="right"></td>
 	        </tr>
 	    </tbody>
 	</table>
@@ -128,6 +133,39 @@ $(function() {
 	function recarga(){
 		$('#content_verMesas').load('mesas.php');
 		
+	}
+
+	function toggle_descuento_detalle(id_detalle){
+		$.post('ac/toggle_descuento_detalle.php', { id_detalle: id_detalle }, function(data) {
+			var response = data;
+			if(typeof data === 'string'){
+				try {
+					response = JSON.parse(data);
+				} catch (e) {
+					alert('Error al aplicar descuento.');
+					return;
+				}
+			}
+
+			if(!response.ok){
+				alert(response.error || 'No se pudo aplicar el descuento.');
+				return;
+			}
+
+			var fila = $('#detalle_'+id_detalle);
+			$('#u_'+id_detalle).html(Number(response.precio).toFixed(2));
+			$('#p_'+id_detalle).html(Number(response.subtotal).toFixed(2));
+			$('#d_'+id_detalle).html(response.btn);
+			$('#consumo_total_mesa').html('<b>'+Number(response.total).toFixed(2)+'</b>');
+
+			if(Number(response.descuento) === 1){
+				fila.css('background-color', '#fcf8e3');
+				$('#m_'+id_detalle).show();
+			}else{
+				fila.css('background-color', '');
+				$('#m_'+id_detalle).hide();
+			}
+		});
 	}
 	
 	function eliminar_detalle(id){

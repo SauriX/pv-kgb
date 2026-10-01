@@ -82,17 +82,23 @@ $v_bebida = $row_b ['bebida'];
 
 			<tbody>
 				<? while($dat=mysql_fetch_assoc($qu)){
-					//Sacamos los productos
+					$tiene_descuento = strpos($dat['comentarios'], '[[DESC100]]') !== false;
 					$consumo_total+=$dat['cantidad']*$dat['precio_venta'];
 				?>
-				<tr id="detalle_<?=$dat['id_detalle']?>">
-					<td><?=$dat['nombre']?></td>
-					<td align="right"><?=number_format($dat['precio_venta'],2)?></td>
+				<tr id="detalle_<?=$dat['id_detalle']?>" <? if($tiene_descuento){ ?>style="background-color:#fcf8e3;"<? } ?>>
+					<td>
+						<?=$dat['nombre']?>
+						<span id="m_<?=$dat['id_detalle']?>" class="label label-warning" <? if(!$tiene_descuento){ ?>style="display:none;"<? } ?>>CORTESIA</span>
+					</td>
+					<td align="right" id="u_<?=$dat['id_detalle']?>"><?=number_format($dat['precio_venta'],2)?></td>
 					<td align="center"><?=$dat['cantidad']?></td>
-					<td align="right"><?=number_format($dat['cantidad']*$dat['precio_venta'],2)?></td>
+					<td align="right" id="p_<?=$dat['id_detalle']?>"><?=number_format($dat['cantidad']*$dat['precio_venta'],2)?></td>
+					<td align="right">
+						<button type="button" class="btn btn-warning btn-xs" id="d_<?=$dat['id_detalle']?>" onclick="toggle_descuento_detalle(<?=$dat['id_detalle']?>); return false;"><?=$tiene_descuento ? 'Restaurar' : '100%'?></button>
 					<?if($s_tipo==1){?>
-					<td align="right"><a role="button" class="btn btn-danger btn-xs "    onclick="eliminar_detalle(<?=$dat['id_detalle'];?>);">Eliminar</a></td>
+						<a role="button" class="btn btn-danger btn-xs" onclick="eliminar_detalle(<?=$dat['id_detalle'];?>); return false;">Eliminar</a>
 					<?}?>
+					</td>
 				</tr>
 				<? } ?>
 
@@ -102,6 +108,7 @@ $v_bebida = $row_b ['bebida'];
 					<td align="right"></td>
 					<td align="right">TOTAL: </td>
 					<td align="right" id="consumo_total_mesa"><strong><?=number_format($consumo_total,2)?></strong></td>
+					<td></td>
 				</tr>
 
 
@@ -146,14 +153,14 @@ $v_bebida = $row_b ['bebida'];
 $( document ).ready(function() {
     console.log( "ready!" );
 
-	var pagarOriginal = $('#consumo_total_mesa').text();
-	console.log(pagarOriginal);
+	window.pagarOriginal = parseFloat($('#consumo_total_mesa strong').text().replace(/,/g, '')) || 0;
+	console.log(window.pagarOriginal);
 	$("#descuento_txt").change(function() {
 
 		var id = $(this).val();
 		var porcentaje = $('option:selected',this).attr('data-id');
 		if (id == 0) {
-			$('#consumo_total_mesa').text(Number(pagarOriginal).toFixed(2));
+			$('#consumo_total_mesa strong').text(Number(window.pagarOriginal).toFixed(2));
 			$('#DescEfec_txt').val('0.00');
 
 			var totalPag = $('#consumo_txt').val();
@@ -163,17 +170,17 @@ $( document ).ready(function() {
 				$('#cambio_txt').val(Number(cambio).toFixed(2));
 			}
 		}else {
-			descuento = Number(porcentaje)*Number(pagarOriginal);
+			descuento = Number(porcentaje)*Number(window.pagarOriginal);
 			$('#DescEfec_txt').val(Number(descuento));
-			totalPag = pagarOriginal-descuento;
-			$('#consumo_total_mesa').text(Number(totalPag).toFixed(2));
+			totalPag = window.pagarOriginal-descuento;
+			$('#consumo_total_mesa strong').text(Number(totalPag).toFixed(2));
 			var recibe = $('#recibe_txt').val();
 			if (recibe != '') {
 				cambio = recibe-totalPag;
 				$('#cambio_txt').val(Number(cambio).toFixed(2));
 			}
 		}
-		console.log(pagarOriginal);
+		console.log(window.pagarOriginal);
 	});
 });
 
@@ -190,15 +197,17 @@ function cerrarMesa(id_venta,mesa){
    	if(descuento !=0){
 	   descuento = $('#consumo_total_mesa').text();
    }*/
-	$.post('ac/cerrar_mesa.php','mesa='+mesa+'&id_venta='+id_venta+'&id_descuento='+id_descuento+'&monto_descuento='+monto_descuento+'&sin_imprimir=1',function(data) {
+	$.post('ac/cerrar_mesa.php','mesa='+mesa+'&id_venta='+id_venta+'&id_descuento='+id_descuento+'&monto_descuento='+monto_descuento,function(data, textStatus, xhr) {
 		data = $.trim(data);
-		var datas = data.split('|');
-		if(datas[0]==1){
-			window.open('?Modulo=VentaTouchCobro&id_venta='+id_venta+'&mesa='+mesa, '_self');
+		if(data==1){
+			var irCobro = function(){
+				window.open('?Modulo=VentaTouchCobro&id_venta='+id_venta+'&mesa='+mesa, '_self');
+			};
+			Printer.procesarTicketRespuesta(xhr, irCobro, id_venta, 'cerrar');
 		}else{
-			if(!isNaN(datas[0])){
+			if(!isNaN(data)){
 				console.log(data);
-				pagar(datas[0]);
+				pagar(data);
 			}else{
 				alert(data);
 				location.reload();
@@ -207,6 +216,43 @@ function cerrarMesa(id_venta,mesa){
 	});
 }
 
+
+function toggle_descuento_detalle(id_detalle){
+	$.post('ac/toggle_descuento_detalle.php', { id_detalle: id_detalle }, function(data) {
+		var response = data;
+		if(typeof data === 'string'){
+			try {
+				response = JSON.parse(data);
+			} catch (e) {
+				alert('Error al aplicar descuento.');
+				return;
+			}
+		}
+
+		if(!response.ok){
+			alert(response.error || 'No se pudo aplicar el descuento.');
+			return;
+		}
+
+		var fila = $('#detalle_'+id_detalle);
+		$('#u_'+id_detalle).html(Number(response.precio).toFixed(2));
+		$('#p_'+id_detalle).html(Number(response.subtotal).toFixed(2));
+		$('#d_'+id_detalle).html(response.btn);
+		$('#consumo_total_mesa strong').html(Number(response.total).toFixed(2));
+		window.pagarOriginal = Number(response.total);
+
+		if(Number(response.descuento) === 1){
+			fila.css('background-color', '#fcf8e3');
+			$('#m_'+id_detalle).show();
+		}else{
+			fila.css('background-color', '');
+			$('#m_'+id_detalle).hide();
+		}
+
+		$('#descuento_txt').val(0);
+		$('#DescEfec_txt').val('0.00');
+	});
+}
 
 function eliminar_detalle(id){
 

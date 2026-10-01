@@ -82,58 +82,66 @@ $datos_conf=mysql_fetch_assoc($q_conf);
 			</div>
 			
 			<div class="form-group">
-				<label for="impresora_sd" class="col-md-4 control-label" style="padding-top:5px;">Impresora Servicio a Domicilio</label>
+				<label for="impresora_sd" class="col-md-4 control-label" style="padding-top:5px;">Imp. Domicilio Caja</label>
 				<div class="col-md-8">
 					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_sd" name="impresora_sd" value="<?=$datos_conf['impresora_sd']?>" autocomplete="off">
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label for="impresora_sd_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Domicilio Para Llevar</label>
+				<label for="impresora_sd_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Domicilio Barra</label>
 				<div class="col-md-8">
 					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_sd_para_llevar" name="impresora_sd_para_llevar" value="<?=$datos_conf['impresora_sd_para_llevar']?>" autocomplete="off">
 				</div>
 			</div>
 			
 			<div class="form-group">
-				<label for="impresora_cuentas" class="col-md-4 control-label" style="padding-top:5px;">Impresora de Comandas</label>
+				<label for="impresora_cuentas" class="col-md-4 control-label" style="padding-top:5px;">Imp. Comandas Caja</label>
 				<div class="col-md-8">
 					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cuentas" name="impresora_cuentas" value="<?=$datos_conf['impresora_cuentas']?>" autocomplete="off">
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label for="impresora_cuentas_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Comandas Para Llevar</label>
+				<label for="impresora_cuentas_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Comandas Barra</label>
 				<div class="col-md-8">
 					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cuentas_para_llevar" name="impresora_cuentas_para_llevar" value="<?=$datos_conf['impresora_cuentas_para_llevar']?>" autocomplete="off">
 				</div>
 			</div>
 			
 			<div class="form-group">
-				<label for="impresora_cobros" class="col-md-4 control-label" style="padding-top:5px;">Impresora de Cobros</label>
+				<label for="impresora_cobros" class="col-md-4 control-label" style="padding-top:5px;">Imp. Cobros Caja</label>
 				<div class="col-md-8">
 					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cobros" name="impresora_cobros" value="<?=$datos_conf['impresora_cobros']?>" autocomplete="off">
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label for="impresora_cobros_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Cobros Para Llevar</label>
+				<label for="impresora_cobros_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Cobros Barra</label>
 				<div class="col-md-8">
 					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cobros_para_llevar" name="impresora_cobros_para_llevar" value="<?=$datos_conf['impresora_cobros_para_llevar']?>" autocomplete="off">
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label for="impresora_cortes" class="col-md-4 control-label" style="padding-top:5px;">Impresora de Cortes</label>
+				<label for="impresora_cortes" class="col-md-4 control-label" style="padding-top:5px;">Imp. Cortes Caja</label>
 				<div class="col-md-8">
 					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cortes" name="impresora_cortes" value="<?=$datos_conf['impresora_cortes']?>" autocomplete="off">
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label for="impresora_cortes_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Cortes Para Llevar</label>
+				<label for="impresora_cortes_para_llevar" class="col-md-4 control-label" style="padding-top:5px;">Imp. Cortes Barra</label>
 				<div class="col-md-8">
 					<input type="text" list="impresoras_disponibles" maxlength="64" class="form-control impresora-selector" id="impresora_cortes_para_llevar" name="impresora_cortes_para_llevar" value="<?=$datos_conf['impresora_cortes_para_llevar']?>" autocomplete="off">
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label for="serverip" class="col-md-4 control-label" style="padding-top:5px;">IP Print Server (tablets)</label>
+				<div class="col-md-8">
+					<input type="text" maxlength="64" class="form-control" id="serverip" name="serverip" value="<?=isset($datos_conf['serverip']) ? htmlspecialchars($datos_conf['serverip']) : ''?>" placeholder="Ej. 192.168.1.90" autocomplete="off">
+					<span class="help-block" style="margin-bottom:0;">Se usa si falla la conexión a localhost (tablets / otros equipos en la red).</span>
 				</div>
 			</div>
 			

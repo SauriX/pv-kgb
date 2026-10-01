@@ -151,12 +151,19 @@ function cerrar_mesa(mesa,id_venta,bebidas){
 			}
 						
 			$('#btn_cerrar_mesa').html('Cerrando...');
-			$.post('ac/cerrar_mesa.php','mesa='+mesa+'&id_venta='+id_venta,function(data) {
+			$.post('ac/cerrar_mesa.php','mesa='+mesa+'&id_venta='+id_venta,function(data, textStatus, xhr) {
 				
 				var datas = data.split('|');
 				console.log(datas);
 				if(datas[0]==1){
-					$('#content_verMesas').load('mesas.php');
+					var recargar = function(){
+						$('#content_verMesas').load('mesas.php');
+					};
+					if(window.Printer && typeof Printer.procesarTicketRespuesta === 'function'){
+						Printer.procesarTicketRespuesta(xhr, recargar, id_venta, 'cerrar');
+					}else{
+						recargar();
+					}
 				}else{
 					alert(data);
 				}

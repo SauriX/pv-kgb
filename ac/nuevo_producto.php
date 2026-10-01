@@ -76,8 +76,7 @@ if($valida>0){
 		$sql2="INSERT INTO productos_base (producto,precio,id_unidad) VALUES ('$nombre','$precio_venta','3')";
 	    $q2=mysql_query($sql2);}
 		
-		$hash = md5(time());
-		mysql_query("UPDATE refresh SET r_productos = '$hash'");
+		actualizar_lista_productos();
 		
 		if($q) echo "1";		
 	}else{

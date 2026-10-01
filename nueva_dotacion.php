@@ -8,59 +8,11 @@
 <?
 
 /********************************************/
-/*	ALGORITMO PARA ACTUALIZAR LOS PRODUCTOS */
+/*	ACTUALIZA LISTA DE INGREDIENTES         */
 /********************************************/
-$sql_productos = "SELECT * FROM productos_base";
-
-
-	$q = mysql_query($sql_productos);
-	$cuantos = mysql_num_rows($q);
-	$strt = 1;
-
-
-
-	while($ft = mysql_fetch_assoc($q)){
-		$codigo = $ft['id_base'];
-		$nombre = acentos($ft['producto']);
-		$precio = $ft['precio'];
-		$id_producto = $ft['id_base'];
-		$impresora = $ft['impresora'];
-		$impresora = (!$impresora) ? 'NULL' : $impresora;
-        //New
-		$cont.= "\"$nombre\" : { codigo: \"$codigo\", precio: \"$precio\", id_producto: \"$id_producto\", impresora: \"$impresora\" }";
-		if($strt<$cuantos){
-			$coma = ",";
-		}else{
-			$coma = "";
-		}
-		$cont.=$coma;
- 		$strt++;
- 	}
-
-	$handle = fopen("lista_ingredientes.php","w");
-
-	$inicio = "\n
-/********************************************/
-/**   VENDEFACIL 4.0 | LISTA DE PRODUCTOS  **/
-/********************************************/
-/* Ultima actualizacion: ".date("Y-m-d H:i:s")."*/
-/********************************************/
-\n";
-	$final = "\n
-/********************************************/
-/**       TERMINA LISTA DE PRODUCTOS       **/
-/********************************************/
-\n";
-
- 	$cont.= $final;
-	fputs($handle,$inicio);
-	fputs($handle,$cont);
-	fclose($handle);
-	mysql_query("UPDATE refresh SET r_venta='$r_productos'");
-
+actualizar_lista_ingredientes();
 /********************************************/
 /*					FIN						*/
-/*	ALGORITMO PARA ACTUALIZAR LOS PRODUCTOS */
 /********************************************/
 
 

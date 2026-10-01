@@ -17,15 +17,93 @@ function impresion_plugin_configuracion()
     return mysql_fetch_assoc($q);
 }
 
-function impresion_plugin_destino($impresora, $impresora_para_llevar, $para_llevar, $comandain, $impresora_cuentas, $impresora_cuentas_para_llevar)
+function impresion_plugin_para_llevar_efectivo($para_llevar, $domicilio = 0)
 {
-    if ($para_llevar == 1) {
-        $impresora = trim($impresora_para_llevar) != '' ? $impresora_para_llevar : $impresora;
+    return intval($para_llevar) == 1 || intval($domicilio) == 1 ? 1 : 0;
+}
+
+function impresion_plugin_destino($impresora_mesa, $impresora_para_llevar, $para_llevar, $comandain, $impresora_cuentas, $impresora_cuentas_para_llevar, $domicilio = 0, $impresora_sd_para_llevar = '', $impresora_sd = '')
+{
+    $es_para_llevar = impresion_plugin_para_llevar_efectivo($para_llevar, $domicilio) == 1;
+    $destino = '';
+
+    if ($comandain == 1) {
+        $destino = $es_para_llevar ? trim($impresora_cuentas_para_llevar) : trim($impresora_cuentas);
     }
-    if ($comandain == 1 || trim($impresora) == '') {
-        $impresora = $para_llevar == 1 ? $impresora_cuentas_para_llevar : $impresora_cuentas;
+
+    if ($destino == '' && $es_para_llevar) {
+        if (trim($impresora_para_llevar) != '') {
+            $destino = trim($impresora_para_llevar);
+        } elseif (trim($impresora_cuentas_para_llevar) != '') {
+            $destino = trim($impresora_cuentas_para_llevar);
+        } elseif (intval($domicilio) == 1) {
+            $destino = trim($impresora_sd_para_llevar) != '' ? trim($impresora_sd_para_llevar) : trim($impresora_sd);
+        }
     }
-    return trim($impresora);
+
+    if ($destino == '' && !$es_para_llevar) {
+        $destino = trim($impresora_mesa);
+        if ($destino == '' || $comandain == 1) {
+            $destino = trim($impresora_cuentas);
+        }
+    }
+
+    if ($destino == '' && $es_para_llevar) {
+        $destino = trim($impresora_mesa);
+    }
+
+    return $destino;
+}
+
+function impresion_plugin_parse_trabajo($trabajo)
+{
+    $trabajo = trim($trabajo);
+    if ($trabajo === '') {
+        return array('destino' => '', 'grupo' => '', 'id_categoria' => 0);
+    }
+    if (strpos($trabajo, '::') !== false) {
+        $partes = explode('::', $trabajo, 2);
+        $grupo = trim($partes[1]);
+        return array(
+            'destino' => trim($partes[0]),
+            'grupo' => $grupo,
+            'id_categoria' => is_numeric($grupo) ? intval($grupo) : 0
+        );
+    }
+    return array('destino' => $trabajo, 'grupo' => '', 'id_categoria' => 0);
+}
+
+function impresion_plugin_trabajo_key($destino, $grupo = '')
+{
+    $destino = trim($destino);
+    if ($destino === '') {
+        return '';
+    }
+    $grupo = trim($grupo);
+    if ($grupo === '') {
+        return $destino;
+    }
+    return $destino . '::' . str_replace('::', '_', $grupo);
+}
+
+function impresion_plugin_nombre_impresora_categoria($impresora_mesa, $impresora_para_llevar, $para_llevar, $domicilio = 0)
+{
+    $es_para_llevar = impresion_plugin_para_llevar_efectivo($para_llevar, $domicilio) == 1;
+    if ($es_para_llevar && trim($impresora_para_llevar) != '') {
+        return trim($impresora_para_llevar);
+    }
+    return trim($impresora_mesa);
+}
+
+function impresion_plugin_etiqueta_comanda($row)
+{
+    if (isset($row['categoria_nombre']) && trim($row['categoria_nombre']) != '') {
+        return trim($row['categoria_nombre']);
+    }
+    if (trim($row['impresora']) != '') {
+        return trim($row['impresora']);
+    }
+    return 'COMANDA';
 }
 
 function impresion_plugin_impresoras_comanda($id_venta, $tipo = 'venta')
@@ -33,16 +111,16 @@ function impresion_plugin_impresoras_comanda($id_venta, $tipo = 'venta')
     $id_venta = intval($id_venta);
     $config = impresion_plugin_configuracion();
     $comandain = intval($config['comandain']);
-    $impresoras = array();
+    $trabajos = array();
     if ($tipo == 'domicilio') {
-        $sql = "SELECT categorias.impresora, categorias.impresora_para_llevar, 1 AS para_llevar
+        $sql = "SELECT productos.id_categoria, categorias.impresora, categorias.impresora_para_llevar, 1 AS para_llevar
             FROM venta_domicilio_detalle
             LEFT JOIN productos ON productos.id_producto = venta_domicilio_detalle.id_producto
             LEFT JOIN categorias ON categorias.id_categoria = productos.id_categoria
             WHERE venta_domicilio_detalle.id_venta_domicilio = $id_venta
             AND venta_domicilio_detalle.id_producto != 0";
     } else {
-        $sql = "SELECT categorias.impresora, categorias.impresora_para_llevar, ventas.para_llevar
+        $sql = "SELECT productos.id_categoria, categorias.impresora, categorias.impresora_para_llevar, ventas.para_llevar, ventas.domicilio
         FROM venta_detalle
         LEFT JOIN ventas ON ventas.id_venta = venta_detalle.id_venta
         LEFT JOIN productos ON productos.id_producto = venta_detalle.id_producto
@@ -52,33 +130,63 @@ function impresion_plugin_impresoras_comanda($id_venta, $tipo = 'venta')
     }
     $q = mysql_query($sql);
     while ($row = mysql_fetch_assoc($q)) {
+        $domicilio_fila = ($tipo == 'domicilio') ? 1 : (isset($row['domicilio']) ? intval($row['domicilio']) : 0);
+        $para_llevar_fila = isset($row['para_llevar']) ? intval($row['para_llevar']) : 0;
         $destino = impresion_plugin_destino(
             $row['impresora'],
             $row['impresora_para_llevar'],
-            intval($row['para_llevar']),
+            $para_llevar_fila,
             $comandain,
             $config['impresora_cuentas'],
-            $config['impresora_cuentas_para_llevar']
+            $config['impresora_cuentas_para_llevar'],
+            $domicilio_fila,
+            $config['impresora_sd_para_llevar'],
+            $config['impresora_sd']
         );
-        if ($destino != '' && !in_array($destino, $impresoras)) {
-            $impresoras[] = $destino;
+        if ($destino == '') {
+            continue;
+        }
+
+        // Impresora única: divide por nombre de impresora de la categoría (como antes).
+        // Sin única: una comanda por impresora configurada (caja/barra de la categoría).
+        if ($comandain == 1) {
+            $grupo = impresion_plugin_nombre_impresora_categoria(
+                $row['impresora'],
+                $row['impresora_para_llevar'],
+                $para_llevar_fila,
+                $domicilio_fila
+            );
+            if ($grupo == '') {
+                $grupo = $destino;
+            }
+            $trabajo = impresion_plugin_trabajo_key($destino, $grupo);
+        } else {
+            $trabajo = $destino;
+        }
+
+        if ($trabajo != '' && !in_array($trabajo, $trabajos)) {
+            $trabajos[] = $trabajo;
         }
     }
-    return $impresoras;
+    return $trabajos;
 }
 
 function impresion_plugin_comanda($id_venta, $impresora, $tipo = 'venta')
 {
     $id_venta = intval($id_venta);
     $impresora = trim($impresora);
+    $trabajo = impresion_plugin_parse_trabajo($impresora);
+    $destino_filtro = $trabajo['destino'];
+    $grupo_filtro = $trabajo['grupo'];
+    $filtrar_grupo = ($grupo_filtro !== '');
     $config = impresion_plugin_configuracion();
     $comandain = intval($config['comandain']);
     $commands = array();
     if ($tipo == 'domicilio') {
-        $sql = "SELECT productos.extra, productos.sinn, venta_domicilio_detalle.cantidad,
+        $sql = "SELECT productos.id_categoria, productos.extra, productos.sinn, venta_domicilio_detalle.cantidad,
             productos.nombre, venta_domicilio_detalle.precio_venta, venta_domicilio_detalle.comentarios, categorias.impresora,
-            categorias.impresora_para_llevar, '' AS mesa, ventas_domicilio.fechahora_alta AS fecha, '' AS hora,
-            1 AS para_llevar
+            categorias.nombre AS categoria_nombre, categorias.impresora_para_llevar, '' AS mesa, ventas_domicilio.fechahora_alta AS fecha, '' AS hora,
+            1 AS para_llevar, 0 AS domicilio
             FROM venta_domicilio_detalle
             LEFT JOIN ventas_domicilio ON ventas_domicilio.id_venta_domicilio = venta_domicilio_detalle.id_venta_domicilio
             LEFT JOIN productos ON productos.id_producto = venta_domicilio_detalle.id_producto
@@ -86,10 +194,10 @@ function impresion_plugin_comanda($id_venta, $impresora, $tipo = 'venta')
             WHERE venta_domicilio_detalle.id_venta_domicilio = $id_venta
             AND venta_domicilio_detalle.id_producto != 0";
     } else {
-        $sql = "SELECT productos.extra, productos.sinn, venta_detalle.cantidad,
+        $sql = "SELECT productos.id_categoria, productos.extra, productos.sinn, venta_detalle.cantidad,
         productos.nombre, venta_detalle.precio_venta, venta_detalle.comentarios, categorias.impresora,
-        categorias.impresora_para_llevar, ventas.mesa, ventas.hora, ventas.fecha,
-        ventas.para_llevar
+        categorias.nombre AS categoria_nombre, categorias.impresora_para_llevar, ventas.mesa, ventas.hora, ventas.fecha,
+        ventas.para_llevar, ventas.domicilio
         FROM venta_detalle
         LEFT JOIN ventas ON ventas.id_venta = venta_detalle.id_venta
         LEFT JOIN productos ON productos.id_producto = venta_detalle.id_producto
@@ -106,26 +214,53 @@ function impresion_plugin_comanda($id_venta, $impresora, $tipo = 'venta')
     $mesa = '';
     $fecha = '';
     $para_llevar = 0;
+    $domicilio = 0;
     while ($row = mysql_fetch_assoc($q)) {
+        $domicilio_fila = ($tipo == 'domicilio') ? 1 : (isset($row['domicilio']) ? intval($row['domicilio']) : 0);
+        $para_llevar_fila = impresion_plugin_para_llevar_efectivo($row['para_llevar'], $domicilio_fila);
         $destino = impresion_plugin_destino(
             $row['impresora'],
             $row['impresora_para_llevar'],
-            intval($row['para_llevar']),
+            isset($row['para_llevar']) ? intval($row['para_llevar']) : 0,
             $comandain,
             $config['impresora_cuentas'],
-            $config['impresora_cuentas_para_llevar']
+            $config['impresora_cuentas_para_llevar'],
+            $domicilio_fila,
+            $config['impresora_sd_para_llevar'],
+            $config['impresora_sd']
         );
-        if ($destino !== $impresora) {
+        if ($destino !== $destino_filtro) {
             continue;
+        }
+        if ($filtrar_grupo) {
+            $grupo_fila = impresion_plugin_nombre_impresora_categoria(
+                $row['impresora'],
+                $row['impresora_para_llevar'],
+                isset($row['para_llevar']) ? intval($row['para_llevar']) : 0,
+                $domicilio_fila
+            );
+            if ($grupo_fila == '') {
+                $grupo_fila = $destino;
+            }
+            if ($grupo_fila !== $grupo_filtro) {
+                continue;
+            }
         }
         $rows[] = $row;
         $mesa = $row['mesa'];
         $fecha = $row['fecha'] . ' ' . $row['hora'];
-        $para_llevar = intval($row['para_llevar']);
+        $para_llevar = $para_llevar_fila;
+        $domicilio = intval($row['domicilio']);
     }
 
     if (count($rows) == 0) {
         return false;
+    }
+
+    if ($filtrar_grupo) {
+        $etiqueta = $grupo_filtro;
+    } else {
+        $etiqueta = $destino_filtro != '' ? $destino_filtro : impresion_plugin_etiqueta_comanda($rows[0]);
     }
 
     $commands[] = impresion_plugin_comando('initializePrint');
@@ -133,9 +268,16 @@ function impresion_plugin_comanda($id_venta, $impresora, $tipo = 'venta')
     $commands[] = impresion_plugin_comando('doubleWidth2');
     $commands[] = impresion_plugin_comando('text', '');
     $commands[] = impresion_plugin_comando('text', '');
-    $commands[] = impresion_plugin_comando('text', $impresora);
+    $commands[] = impresion_plugin_comando('text', $etiqueta);
     $commands[] = impresion_plugin_comando('text', 'COMANDA #' . $id_venta);
-    $commands[] = impresion_plugin_comando('text', $para_llevar == 1 ? '*** PARA LLEVAR ***' : 'MESA: ' . $mesa);
+    if ($domicilio == 1) {
+        $titulo_comanda = '*** DOMICILIO ***';
+    } elseif ($para_llevar == 1) {
+        $titulo_comanda = '*** PARA LLEVAR ***';
+    } else {
+        $titulo_comanda = 'MESA: ' . $mesa;
+    }
+    $commands[] = impresion_plugin_comando('text', $titulo_comanda);
     $commands[] = impresion_plugin_comando('normalWidth');
     $commands[] = impresion_plugin_comando('text', $fecha);
     $commands[] = impresion_plugin_comando('text', '__________________________________________');
@@ -167,9 +309,48 @@ function impresion_plugin_comanda($id_venta, $impresora, $tipo = 'venta')
     $commands[] = impresion_plugin_comando('full');
 
     return array(
-        'printerName' => $impresora,
+        'printerName' => $destino_filtro,
         'commands' => $commands
     );
+}
+
+function impresion_plugin_impresora_ticket($config, $tipo = 'cobrar', $para_llevar = 0, $domicilio = 0)
+{
+    $tipo = $tipo == 'cerrar' ? 'cerrar' : 'cobrar';
+    $usa_para_llevar = intval($para_llevar) == 1 || intval($domicilio) == 1;
+    $candidatas = array();
+    if ($tipo == 'cerrar') {
+        if ($usa_para_llevar) {
+            $candidatas[] = $config['impresora_cuentas_para_llevar'];
+            $candidatas[] = $config['impresora_cobros_para_llevar'];
+        }
+        $candidatas[] = $config['impresora_cuentas'];
+        $candidatas[] = $config['impresora_cobros'];
+    } else {
+        if ($usa_para_llevar) {
+            $candidatas[] = $config['impresora_cobros_para_llevar'];
+            $candidatas[] = $config['impresora_cuentas_para_llevar'];
+        }
+        $candidatas[] = $config['impresora_cobros'];
+        $candidatas[] = $config['impresora_cuentas'];
+    }
+    if ($domicilio) {
+        $candidatas[] = $config['impresora_sd_para_llevar'];
+        $candidatas[] = $config['impresora_sd'];
+    }
+    foreach ($candidatas as $nombre) {
+        if (trim($nombre) != '') {
+            return trim($nombre);
+        }
+    }
+    $q = mysql_query("SELECT impresora FROM categorias WHERE impresora IS NOT NULL AND TRIM(impresora) != '' LIMIT 1");
+    if ($q && mysql_num_rows($q)) {
+        $row = mysql_fetch_assoc($q);
+        if (trim($row['impresora']) != '') {
+            return trim($row['impresora']);
+        }
+    }
+    return '';
 }
 
 function impresion_plugin_ticket_mesa($id_venta, $tipo)
@@ -184,14 +365,9 @@ function impresion_plugin_ticket_mesa($id_venta, $tipo)
     }
 
     $para_llevar = intval($venta['para_llevar']) == 1;
-    $impresora = $tipo == 'cerrar' ? $config['impresora_cuentas'] : $config['impresora_cobros'];
-    if ($para_llevar) {
-        $alternativa = $tipo == 'cerrar' ? $config['impresora_cuentas_para_llevar'] : $config['impresora_cobros_para_llevar'];
-        if (trim($alternativa) != '') {
-            $impresora = $alternativa;
-        }
-    }
-    if (trim($impresora) == '') {
+    $domicilio = intval($venta['domicilio']) == 1;
+    $impresora = impresion_plugin_impresora_ticket($config, $tipo, $para_llevar, $domicilio);
+    if ($impresora == '') {
         return false;
     }
 
@@ -208,16 +384,16 @@ function impresion_plugin_ticket_mesa($id_venta, $tipo)
     $mesa = $venta['mesa'] == 'BARRA' ? 'BARRA' : 'MESA: ' . $venta['mesa'];
     $commands[] = impresion_plugin_comando('text', $fecha);
     $commands[] = impresion_plugin_comando('text', 'FOLIO: #' . $id_venta . ' - ' . $mesa);
-    if (intval($venta['domicilio']) == 1) {
+    if ($domicilio) {
         $commands[] = impresion_plugin_comando('text', 'SERVICIO A DOMICILIO');
     } elseif ($para_llevar) {
         $commands[] = impresion_plugin_comando('text', 'PARA LLEVAR');
     }
     $commands[] = impresion_plugin_comando('text', '------------------------------------------');
     $commands[] = impresion_plugin_comando('left');
-    $commands[] = impresion_plugin_comando('text', 'PRODUCTO               CANT   UNIT    SUBT');
+    $commands[] = impresion_plugin_comando('text', 'PRODUCTO          CANT    UNIT     SUBT');
 
-    $q = mysql_query("SELECT venta_detalle.cantidad, productos.nombre, venta_detalle.precio_venta
+    $q = mysql_query("SELECT venta_detalle.cantidad, productos.nombre, venta_detalle.precio_venta, venta_detalle.comentarios
         FROM venta_detalle
         JOIN productos ON productos.id_producto = venta_detalle.id_producto
         WHERE venta_detalle.id_venta = $id_venta");
@@ -225,16 +401,44 @@ function impresion_plugin_ticket_mesa($id_venta, $tipo)
     while ($detalle = mysql_fetch_assoc($q)) {
         $subtotal = floatval($detalle['cantidad']) * floatval($detalle['precio_venta']);
         $total += $subtotal;
-        $linea = substr(eliminar_tildes($detalle['nombre']), 0, 20);
-        $linea = str_pad($linea, 22) . str_pad($detalle['cantidad'], 5, ' ', STR_PAD_LEFT);
-        $linea .= str_pad(number_format($detalle['precio_venta'], 2), 8, ' ', STR_PAD_LEFT);
-        $linea .= str_pad(number_format($subtotal, 2), 8, ' ', STR_PAD_LEFT);
+        $nombre = substr(eliminar_tildes($detalle['nombre']), 0, 16);
+        $linea = str_pad($nombre, 17);
+        $linea .= str_pad(strval(intval($detalle['cantidad'])), 5, ' ', STR_PAD_LEFT);
+        $linea .= str_pad(number_format(floatval($detalle['precio_venta']), 2, '.', ''), 9, ' ', STR_PAD_LEFT);
+        $linea .= str_pad(number_format($subtotal, 2, '.', ''), 11, ' ', STR_PAD_LEFT);
         $commands[] = impresion_plugin_comando('text', $linea);
+        $comentario_producto = isset($detalle['comentarios']) ? $detalle['comentarios'] : '';
+        if (strpos($comentario_producto, '[[DESC100]]') !== false) {
+            $commands[] = impresion_plugin_comando('text', '  * DESC. 100%');
+        }
     }
+
+    $descuento = floatval($venta['DescEfec_txt']);
+    $nombre_cupon = '';
+    $id_descuento = intval($venta['descuento_txt']);
+    if ($id_descuento > 0) {
+        $q_cupon = mysql_query("SELECT cupon FROM cupones WHERE id_cupon = $id_descuento LIMIT 1");
+        if ($q_cupon && ($cupon = mysql_fetch_assoc($q_cupon)) && trim($cupon['cupon']) != '') {
+            $nombre_cupon = trim($cupon['cupon']);
+        }
+    }
+    $total_cobrar = $total - $descuento;
+    if ($total_cobrar < 0) {
+        $total_cobrar = 0;
+    }
+
     $commands[] = impresion_plugin_comando('text', '------------------------------------------');
     $commands[] = impresion_plugin_comando('right');
+    if ($descuento > 0.009) {
+        $commands[] = impresion_plugin_comando('text', 'CONSUMO: $' . number_format($total, 2));
+        $texto_descuento = 'DESCUENTO: $' . number_format($descuento, 2);
+        if ($nombre_cupon != '') {
+            $texto_descuento .= ' (' . eliminar_tildes($nombre_cupon) . ')';
+        }
+        $commands[] = impresion_plugin_comando('text', $texto_descuento);
+    }
     $commands[] = impresion_plugin_comando('doubleWidth2');
-    $commands[] = impresion_plugin_comando('text', 'TOTAL: $' . number_format($total, 2));
+    $commands[] = impresion_plugin_comando('text', 'TOTAL: $' . number_format($descuento > 0.009 ? $total_cobrar : $total, 2));
     $commands[] = impresion_plugin_comando('normalWidth');
     if ($tipo == 'cobrar' && trim($venta['metodo_txt']) != '') {
         $commands[] = impresion_plugin_comando('text', 'PAGO: ' . eliminar_tildes($venta['metodo_txt']));
@@ -365,45 +569,248 @@ function impresion_plugin_corte($id_corte)
     $commands[] = impresion_plugin_comando('text', eliminar_tildes($config['establecimiento']));
     $commands[] = impresion_plugin_comando('text', 'CORTE DE CAJA #' . $id_corte);
     $commands[] = impresion_plugin_comando('normalWidth');
-    $commands[] = impresion_plugin_comando('text', 'APERTURA: ' . $corte['fh_abierto']);
-    $commands[] = impresion_plugin_comando('text', 'CORTE: ' . $corte['fecha'] . ' ' . $corte['hora']);
-    $commands[] = impresion_plugin_comando('text', '------------------------------------------');
-    $commands[] = impresion_plugin_comando('text', 'VENTA POR PRODUCTO');
+    $commands[] = impresion_plugin_comando('text', 'FECHA APERTURA: ' . $corte['fh_abierto']);
+    $commands[] = impresion_plugin_comando('text', 'FECHA CORTE: ' . $corte['fecha'] . ' ' . $corte['hora']);
+    $commands[] = impresion_plugin_comando('text', '');
+    $commands[] = impresion_plugin_comando('text', '################# VENTA ##################');
     $commands[] = impresion_plugin_comando('left');
+    $commands[] = impresion_plugin_comando('text', 'PRODUCTO              CANT   UNIT     SUBT');
 
-    $q = mysql_query("SELECT productos.nombre, SUM(venta_detalle.cantidad) AS cantidad,
+    $productos_total = 0;
+    $q = mysql_query("SELECT productos.nombre, productos.extra, productos.paquete,
+        SUM(venta_detalle.cantidad) AS cantidad,
+        AVG(venta_detalle.precio_venta) AS precio_unit,
         SUM(venta_detalle.cantidad * venta_detalle.precio_venta) AS total
         FROM venta_detalle
         JOIN ventas ON ventas.id_venta = venta_detalle.id_venta
         JOIN productos ON productos.id_producto = venta_detalle.id_producto
         WHERE ventas.id_corte = $id_corte AND venta_detalle.precio_venta != 0
-        GROUP BY venta_detalle.id_producto, productos.nombre ORDER BY productos.nombre");
+        GROUP BY venta_detalle.id_producto, productos.nombre, productos.extra, productos.paquete
+        ORDER BY productos.nombre");
     while ($producto = mysql_fetch_assoc($q)) {
-        $linea = substr(eliminar_tildes($producto['nombre']), 0, 25);
-        $linea = str_pad($linea, 26) . str_pad($producto['cantidad'], 5, ' ', STR_PAD_LEFT);
-        $linea .= str_pad(number_format($producto['total'], 2), 11, ' ', STR_PAD_LEFT);
+        $productos_total += floatval($producto['total']);
+        $nombre = eliminar_tildes($producto['nombre']);
+        if (intval($producto['extra']) == 1) {
+            $nombre = '(EXTRA)' . $nombre;
+        } elseif (intval($producto['paquete']) == 1) {
+            $nombre = '(PAQ)' . $nombre;
+        }
+        $nombre = substr($nombre, 0, 20);
+        $cantidad = floatval($producto['cantidad']);
+        $unit = number_format(floatval($producto['precio_unit']), 2, '.', '');
+        $subt = number_format(floatval($producto['total']), 2, '.', '');
+        $linea = str_pad($nombre, 20)
+            . str_pad($cantidad, 6, ' ', STR_PAD_LEFT)
+            . str_pad($unit, 8, ' ', STR_PAD_LEFT)
+            . str_pad($subt, 8, ' ', STR_PAD_LEFT);
         $commands[] = impresion_plugin_comando('text', $linea);
     }
 
-    $q = mysql_query("SELECT COUNT(*) AS cuentas, COALESCE(SUM(monto_pagado), 0) AS total,
-        COALESCE(SUM(monto_efectivo), 0) AS efectivo, COALESCE(SUM(monto_tarjeta), 0) AS tarjeta,
-        COALESCE(SUM(monto_transferencia), 0) AS transferencia
-        FROM ventas WHERE id_corte = $id_corte");
-    $ventas = mysql_fetch_assoc($q);
-    $q = mysql_query("SELECT COALESCE(SUM(monto), 0) AS total FROM gastos WHERE id_corte = $id_corte");
-    $gastos = mysql_fetch_assoc($q);
+    $descuentos_cupon = 0;
+    $q = mysql_query("SELECT SUM(DescEfec_txt) AS total FROM ventas WHERE id_corte = $id_corte");
+    if ($q && ($row = mysql_fetch_assoc($q))) {
+        $descuentos_cupon = floatval($row['total']);
+    }
+    $venta_total = $productos_total - $descuentos_cupon;
 
     $commands[] = impresion_plugin_comando('text', '------------------------------------------');
-    $commands[] = impresion_plugin_comando('text', 'CUENTAS: ' . $ventas['cuentas']);
-    $commands[] = impresion_plugin_comando('text', 'EFECTIVO VENTAS: $' . number_format($ventas['efectivo'], 2));
-    $commands[] = impresion_plugin_comando('text', 'TARJETA: $' . number_format($ventas['tarjeta'], 2));
-    $commands[] = impresion_plugin_comando('text', 'TRANSFERENCIA: $' . number_format($ventas['transferencia'], 2));
-    $commands[] = impresion_plugin_comando('text', 'GASTOS: $' . number_format($gastos['total'], 2));
-    $commands[] = impresion_plugin_comando('text', 'EFECTIVO EN CAJA: $' . number_format($corte['efectivoCaja'], 2));
-    $commands[] = impresion_plugin_comando('text', 'TPV DECLARADA: $' . number_format($corte['tpv'], 2));
+    $commands[] = impresion_plugin_comando('right');
+    $commands[] = impresion_plugin_comando('text', 'VENTA SUBTOTAL: ' . number_format($productos_total, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'DESCUENTOS: ' . number_format($descuentos_cupon, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'VENTA TOTAL: ' . number_format($venta_total, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('left');
+
+    $efectivo = 0;
+    $tarjeta = 0;
+    $transferencia = 0;
+    $total_cobrado = 0;
+    $cta_expedidas = 0;
+    $para_llevar_ct = 0;
+    $cancelaciones = 0;
+    $mesas_ct = 0;
+    $barra_ct = 0;
+    $mesas_monto = 0;
+    $barra_monto = 0;
+    $q = mysql_query("SELECT id_metodo, monto_pagado, monto_efectivo, monto_tarjeta,
+        monto_transferencia, mesa, para_llevar, reabierta
+        FROM ventas WHERE id_corte = $id_corte");
+    while ($venta = mysql_fetch_assoc($q)) {
+        $cta_expedidas++;
+        $pagado = floatval($venta['monto_pagado']);
+        $m_efectivo = floatval($venta['monto_efectivo']);
+        $m_tarjeta = floatval($venta['monto_tarjeta']);
+        $m_transferencia = floatval($venta['monto_transferencia']);
+        $total_cobrado += $pagado;
+        $id_metodo = intval($venta['id_metodo']);
+        $tiene_desglose = ($m_efectivo + $m_tarjeta + $m_transferencia) > 0.009;
+
+        // Efectivo real de la venta (sin el cambio): pagado - tarjeta - transferencia
+        if ($tiene_desglose) {
+            $parte_efectivo = $pagado - $m_tarjeta - $m_transferencia;
+            if ($parte_efectivo < 0) {
+                $parte_efectivo = 0;
+            }
+            $efectivo += $parte_efectivo;
+            $tarjeta += $m_tarjeta;
+            $transferencia += $m_transferencia;
+        } elseif ($id_metodo == 3) {
+            $transferencia += $pagado;
+        } elseif ($id_metodo == 4 || $id_metodo == 28 || $id_metodo == 2 || $id_metodo == 5) {
+            $tarjeta += $pagado;
+        } else {
+            $efectivo += $pagado;
+        }
+
+        if ($venta['mesa'] != 'BARRA') {
+            $mesas_ct++;
+            $mesas_monto += $pagado;
+        } else {
+            $barra_ct++;
+            $barra_monto += $pagado;
+        }
+        if (intval($venta['para_llevar']) == 1) {
+            $para_llevar_ct++;
+        }
+        if (intval($venta['reabierta']) == 1) {
+            $cancelaciones++;
+        }
+    }
+
+    $promedio = $cta_expedidas > 0 ? ($productos_total / $cta_expedidas) : 0;
+
+    $commands[] = impresion_plugin_comando('text', 'DESGLOSE:');
+    $commands[] = impresion_plugin_comando('text', 'EFECTIVO: ' . number_format($efectivo, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'TARJETAS: ' . number_format($tarjeta, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'TRANSFERENCIAS: ' . number_format($transferencia, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', '');
+    $commands[] = impresion_plugin_comando('text', 'CUENTAS EXPEDIDAS: ' . $cta_expedidas);
+    $commands[] = impresion_plugin_comando('text', 'VENTAS PARA LLEVAR: ' . $para_llevar_ct);
+    $commands[] = impresion_plugin_comando('text', 'PROMEDIO POR CUENTA: ' . number_format($promedio, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'CANCELACIONES: ' . $cancelaciones);
+    $commands[] = impresion_plugin_comando('text', '');
+
+    $q = mysql_query("SELECT gastos.descripcion, gastos.monto
+        FROM gastos
+        WHERE gastos.id_corte = $id_corte
+        ORDER BY gastos.id_gasto ASC");
+    $gastos_detalle = array();
+    $gastos_total = 0;
+    while ($gasto = mysql_fetch_assoc($q)) {
+        $gastos_detalle[] = $gasto;
+        $gastos_total += floatval($gasto['monto']);
+    }
+
+    $commands[] = impresion_plugin_comando('center');
+    $commands[] = impresion_plugin_comando('text', '################# GASTOS #################');
+    $commands[] = impresion_plugin_comando('left');
+    $commands[] = impresion_plugin_comando('text', 'DESCRIPCION                          MONTO');
+    foreach ($gastos_detalle as $gasto) {
+        $desc = substr(eliminar_tildes($gasto['descripcion']), 0, 28);
+        $linea = str_pad($desc, 30) . str_pad(number_format($gasto['monto'], 2, '.', ''), 12, ' ', STR_PAD_LEFT);
+        $commands[] = impresion_plugin_comando('text', $linea);
+    }
+    $commands[] = impresion_plugin_comando('text', '------------------------------------------');
+    $commands[] = impresion_plugin_comando('right');
+    $commands[] = impresion_plugin_comando('text', 'TOTAL DE GASTOS: ' . number_format($gastos_total, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('left');
+
+    $q = mysql_query("SELECT venta_detalle.cantidad, venta_detalle.comentarios,
+        productos.nombre, productos.precio_venta AS precio_catalogo,
+        ventas.id_venta, ventas.mesa
+        FROM venta_detalle
+        JOIN ventas ON ventas.id_venta = venta_detalle.id_venta
+        JOIN productos ON productos.id_producto = venta_detalle.id_producto
+        WHERE ventas.id_corte = $id_corte
+        AND venta_detalle.comentarios LIKE '%[[DESC100]]%'
+        ORDER BY ventas.id_venta ASC, venta_detalle.id_detalle ASC");
+    $cortesias = array();
+    $cortesias_total = 0;
+    while ($row = mysql_fetch_assoc($q)) {
+        $precio_original = floatval($row['precio_catalogo']);
+        if (preg_match('/\[\[PRECIO_ORIG:([0-9.]+)\]\]/', $row['comentarios'], $matches)) {
+            $precio_original = floatval($matches[1]);
+        }
+        $importe = floatval($row['cantidad']) * $precio_original;
+        $cortesias_total += $importe;
+        $cortesias[] = array(
+            'nombre' => $row['nombre'],
+            'cantidad' => $row['cantidad'],
+            'importe' => $importe,
+            'mesa' => $row['mesa'],
+            'id_venta' => $row['id_venta']
+        );
+    }
+    if (count($cortesias) > 0) {
+        $commands[] = impresion_plugin_comando('text', '');
+        $commands[] = impresion_plugin_comando('center');
+        $commands[] = impresion_plugin_comando('text', '############### CORTESIAS ################');
+        $commands[] = impresion_plugin_comando('left');
+        $commands[] = impresion_plugin_comando('text', 'PRODUCTO                    CANT    VALOR');
+        foreach ($cortesias as $cortesia) {
+            $linea = substr(eliminar_tildes($cortesia['nombre']), 0, 24);
+            $linea = str_pad($linea, 26) . str_pad($cortesia['cantidad'], 5, ' ', STR_PAD_LEFT);
+            $linea .= str_pad(number_format($cortesia['importe'], 2), 11, ' ', STR_PAD_LEFT);
+            $commands[] = impresion_plugin_comando('text', $linea);
+            $mesa = $cortesia['mesa'] == 'BARRA' ? 'BARRA' : 'MESA ' . $cortesia['mesa'];
+            $commands[] = impresion_plugin_comando('text', '  Folio #' . $cortesia['id_venta'] . ' - ' . $mesa);
+        }
+        $commands[] = impresion_plugin_comando('right');
+        $commands[] = impresion_plugin_comando('text', 'TOTAL CORTESIAS: $' . number_format($cortesias_total, 2));
+        $commands[] = impresion_plugin_comando('left');
+    }
+
+    $fondo_caja = floatval($corte['fondo_caja']);
+    $efectivo_declarado = floatval($corte['efectivoCaja']);
+    $tpv_declarada = floatval($corte['tpv']);
+    $ajuste = isset($corte['ajuste']) ? intval($corte['ajuste']) : 0;
+
+    // Como el corte anterior:
+    // SUBTOTAL = fondo + venta neta
+    // TOTAL (EN CAJA esperado) = SUBTOTAL - gastos
+    // CAPTURA = efectivo declarado + TPV declarada
+    $subtotal_caja = $fondo_caja + $venta_total;
+    $total_caja = $subtotal_caja - $gastos_total;
+    $total_captura = $efectivo_declarado + $tpv_declarada;
+    $diff_captura = $total_captura - $total_caja;
+
+    $commands[] = impresion_plugin_comando('text', '');
+    $commands[] = impresion_plugin_comando('center');
+    $commands[] = impresion_plugin_comando('text', '############### CORTE CAJA ###############');
+    $commands[] = impresion_plugin_comando('left');
+    $commands[] = impresion_plugin_comando('text', 'FONDO DE CAJA: ' . number_format($fondo_caja, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'EFECTIVO: ' . number_format($efectivo, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'TARJETAS: ' . number_format($tarjeta, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'TRANSFERENCIAS: ' . number_format($transferencia, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'SUBTOTAL: ' . number_format($subtotal_caja, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'GASTOS: ' . number_format($gastos_total, 2, '.', ''));
+    $commands[] = impresion_plugin_comando('text', 'TOTAL: ' . number_format($total_caja, 2, '.', ''));
+
+    if ($ajuste == 0) {
+        $commands[] = impresion_plugin_comando('center');
+        $commands[] = impresion_plugin_comando('text', '############## CORTE CAPTURA #############');
+        $commands[] = impresion_plugin_comando('left');
+        $commands[] = impresion_plugin_comando('text', 'EFECTIVO TOTAL: ' . number_format($efectivo_declarado, 2, '.', ''));
+        $commands[] = impresion_plugin_comando('text', 'TARJETAS: ' . number_format($tpv_declarada, 2, '.', ''));
+        $commands[] = impresion_plugin_comando('text', 'TOTAL: ' . number_format($total_captura, 2, '.', ''));
+        $commands[] = impresion_plugin_comando('text', '');
+        $commands[] = impresion_plugin_comando('text', '------------------------------------------');
+        $commands[] = impresion_plugin_comando('text', '');
+        $commands[] = impresion_plugin_comando('right');
+        $commands[] = impresion_plugin_comando('text', 'TOTAL VENTA: ' . number_format($total_caja, 2, '.', ''));
+        $commands[] = impresion_plugin_comando('text', 'TOTAL CAPTURA: ' . number_format($total_captura, 2, '.', ''));
+        if (abs($diff_captura) < 0.01) {
+            $commands[] = impresion_plugin_comando('text', 'DIFERENCIA: $0.00');
+        } elseif ($diff_captura > 0) {
+            $commands[] = impresion_plugin_comando('text', 'SOBRANTE: $' . number_format($diff_captura, 2, '.', ''));
+        } else {
+            $commands[] = impresion_plugin_comando('text', 'FALTANTE: $' . number_format(abs($diff_captura), 2, '.', ''));
+        }
+    }
+
+    $commands[] = impresion_plugin_comando('text', '');
     $commands[] = impresion_plugin_comando('right');
     $commands[] = impresion_plugin_comando('doubleWidth2');
-    $commands[] = impresion_plugin_comando('text', 'TOTAL VENTAS: $' . number_format($ventas['total'], 2));
+    $commands[] = impresion_plugin_comando('text', 'TOTAL COBRADO: $' . number_format($total_cobrado, 2));
     $commands[] = impresion_plugin_comando('normalWidth');
     $commands[] = impresion_plugin_comando('newLines', null, 4);
     $commands[] = impresion_plugin_comando('full');

@@ -467,21 +467,10 @@ function cobrar(){
 				var datas = data.split('|');
 
 				if(datas[0]==1){
-					var ticket = xhr.getResponseHeader('X-PV-Ticket');
 					var continuar = function(){
 						window.location  = 'index.php?Modulo=VentaTouch';
 					};
-					if(ticket && window.Printer && typeof Printer.imprimirTicketMesa === 'function'){
-						var response = ticket.split('|');
-						Printer.imprimirTicketMesa(response[0], response[1])
-							.then(continuar)
-							.catch(function(error){
-								console.error(error);
-								continuar();
-							});
-					}else{
-						continuar();
-					}
+					Printer.procesarTicketRespuesta(xhr, continuar, <?=$id_venta?>, 'cobrar');
 				}else{
 					console.log(data);
 					alert('Error: '+data);

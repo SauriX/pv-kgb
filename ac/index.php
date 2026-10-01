@@ -12,6 +12,7 @@ $n_corte = mysql_num_rows($q_corte);
 $conf="SELECT * FROM configuracion ";
 $q_cconf = mysql_query($conf);
 $n_cconf= mysql_num_rows($q_cconf);
+$conf=mysql_fetch_assoc($q_cconf);
 
 ?>
 <!DOCTYPE html>
@@ -46,7 +47,10 @@ $n_cconf= mysql_num_rows($q_cconf);
 	<script src="js/bootstrap-datepicker.js"></script>
 	<script src="js/jquery.timeago.js" type="text/javascript"></script>
 	<script src="js/jquery.alphanumeric.pack.js"></script>
-	<script src="../assets/js/printer.js?v=20260831-4"></script>
+	<script>
+		window.PV_SERVER_IP = <?=json_encode(isset($conf['serverip']) ? $conf['serverip'] : '')?>;
+	</script>
+	<script src="../assets/js/printer.js?v=20260930-1"></script>
     <!--
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.2/bootstrap-slider.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.2/bootstrap-slider.min.js"></script>

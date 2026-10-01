@@ -558,3 +558,117 @@ function id_costo_envio(){
 	$q = mysql_query($sql);
 	return @mysql_result($q,0);
 }
+
+/**
+ * Regenera lista_productos.php desde la BD.
+ * Ya no se usa la tabla refresh: al guardar o abrir venta se actualiza sola.
+ */
+function actualizar_lista_productos($archivo = null)
+{
+	if ($archivo === null) {
+		$archivo = dirname(__FILE__) . '/../lista_productos.php';
+	}
+
+	$sql = "SELECT productos.* FROM productos
+		LEFT JOIN categorias ON categorias.id_categoria = productos.id_categoria
+		WHERE productos.activo=1
+		ORDER BY productos.id_categoria ASC, productos.precio_venta ASC";
+	$q = mysql_query($sql);
+	if (!$q) {
+		return false;
+	}
+
+	$cuantos = mysql_num_rows($q);
+	$strt = 1;
+	$cont = '';
+	while ($ft = mysql_fetch_assoc($q)) {
+		$codigo = trim($ft['codigo']);
+		$nombre = acentos($ft['nombre']);
+		$nombre = str_replace(array('\\', '"'), array('\\\\', '\\"'), $nombre);
+		$codigo = str_replace(array('\\', '"'), array('\\\\', '\\"'), $codigo);
+		$precio = $ft['precio_venta'];
+		$id_producto = $ft['id_producto'];
+		$impresora = isset($ft['impresora']) ? $ft['impresora'] : '';
+		$impresora = (!$impresora) ? 'NULL' : $impresora;
+		$cont .= "\"$nombre\" : { codigo: \"$codigo\", precio: \"$precio\", id_producto: \"$id_producto\", impresora: \"$impresora\" }";
+		$cont .= ($strt < $cuantos) ? ',' : '';
+		$strt++;
+	}
+
+	$inicio = "\n
+/********************************************/
+/**   VENDEFACIL 2.0 | LISTA DE PRODUCTOS  **/
+/********************************************/
+/* Ultima actualizacion: " . date("Y-m-d H:i:s") . "*/
+/********************************************/
+\n";
+	$final = "\n
+/********************************************/
+/**       TERMINA LISTA DE PRODUCTOS       **/
+/********************************************/
+\n";
+
+	$handle = @fopen($archivo, 'w');
+	if (!$handle) {
+		return false;
+	}
+	fputs($handle, $inicio);
+	fputs($handle, $cont);
+	fputs($handle, $final);
+	fclose($handle);
+	return true;
+}
+
+/**
+ * Regenera lista_ingredientes.php desde productos_base.
+ */
+function actualizar_lista_ingredientes($archivo = null)
+{
+	if ($archivo === null) {
+		$archivo = dirname(__FILE__) . '/../lista_ingredientes.php';
+	}
+
+	$q = mysql_query("SELECT * FROM productos_base");
+	if (!$q) {
+		return false;
+	}
+
+	$cuantos = mysql_num_rows($q);
+	$strt = 1;
+	$cont = '';
+	while ($ft = mysql_fetch_assoc($q)) {
+		$codigo = $ft['id_base'];
+		$nombre = acentos($ft['producto']);
+		$nombre = str_replace(array('\\', '"'), array('\\\\', '\\"'), $nombre);
+		$precio = $ft['precio'];
+		$id_producto = $ft['id_base'];
+		$impresora = isset($ft['impresora']) ? $ft['impresora'] : '';
+		$impresora = (!$impresora) ? 'NULL' : $impresora;
+		$cont .= "\"$nombre\" : { codigo: \"$codigo\", precio: \"$precio\", id_producto: \"$id_producto\", impresora: \"$impresora\" }";
+		$cont .= ($strt < $cuantos) ? ',' : '';
+		$strt++;
+	}
+
+	$inicio = "\n
+/********************************************/
+/**   VENDEFACIL 4.0 | LISTA DE INGREDIENTES **/
+/********************************************/
+/* Ultima actualizacion: " . date("Y-m-d H:i:s") . "*/
+/********************************************/
+\n";
+	$final = "\n
+/********************************************/
+/**     TERMINA LISTA DE INGREDIENTES      **/
+/********************************************/
+\n";
+
+	$handle = @fopen($archivo, 'w');
+	if (!$handle) {
+		return false;
+	}
+	fputs($handle, $inicio);
+	fputs($handle, $cont);
+	fputs($handle, $final);
+	fclose($handle);
+	return true;
+}
